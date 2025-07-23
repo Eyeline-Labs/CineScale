@@ -118,8 +118,12 @@ def usp_attn_forward(self, x, freqs):
     v = rearrange(v, "b s (n d) -> b s n d", n=self.num_heads)
 
     if q.shape == v.shape:
-        attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
-        # attention_scale = None
+        new_size = q.shape[1] / 21 * 8
+        if new_size > 5000: 
+            attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
+            # attention_scale = None
+        else:
+            attention_scale = None
     else:
         attention_scale = None
 

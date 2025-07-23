@@ -1,5 +1,5 @@
 import torch
-from diffsynth import ModelManager, WanVideoPipeline, save_video, VideoData
+from diffsynth import ModelManager, WanVideoPipeline_Pro, save_video, VideoData
 from modelscope import snapshot_download
 import torch.distributed as dist
 
@@ -44,14 +44,14 @@ initialize_model_parallel(
 )
 torch.cuda.set_device(dist.get_rank())
 
-pipe = WanVideoPipeline.from_model_manager(model_manager, 
+pipe = WanVideoPipeline_Pro.from_model_manager(model_manager, 
                                            torch_dtype=torch.bfloat16, 
                                            device=f"cuda:{dist.get_rank()}", 
                                            use_usp=True if dist.get_world_size() > 1 else False)
 pipe.enable_vram_management(num_persistent_param_in_dit=None) # You can set `num_persistent_param_in_dit` to a small number to reduce VRAM required.
 
 # Text-to-video
-video = pipe(
+videos = pipe(
     prompt="In a lush, verdant garden, a magnificent peacock stands proudly, its iridescent feathers shimmering in the sunlight. The camera captures a close-up of its vibrant blue and green plumage, each feather a masterpiece of nature's artistry. As the peacock begins to strut, its tail fans out in a breathtaking display, the intricate patterns resembling a living tapestry. The gentle rustle of its feathers accompanies its graceful movements, while the surrounding foliage provides a serene backdrop. The peacock pauses, its head held high, showcasing its regal elegance amidst the tranquil garden setting.",
     negative_prompt="Bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards",
     num_inference_steps=50,
@@ -63,4 +63,5 @@ video = pipe(
     cfg_scale=5.0,
 )
 if dist.get_rank() == 0:
-    save_video(video, "video1.mp4", fps=15)
+    for video_id, video in enumerate(videos):
+        save_video(video, "video_{}.mp4".format(video_id), fps=15)

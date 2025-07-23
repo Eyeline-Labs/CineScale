@@ -69,12 +69,22 @@ def sinusoidal_embedding_1d(dim, position):
     return x.to(position.dtype)
 
 
-def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
+def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0, ntk_alpha = [1.0, 1.0, 1.0]):
     # 3d rope precompute
-    f_freqs_cis = precompute_freqs_cis(dim - 2 * (dim // 3), end, theta)
-    h_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
-    w_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
+    f_freqs_cis = precompute_freqs_cis_ntk(dim - 2 * (dim // 3), end, theta, ntk_alpha[0])
+    h_freqs_cis = precompute_freqs_cis_ntk(dim // 3, end, theta, ntk_alpha[1])
+    w_freqs_cis = precompute_freqs_cis_ntk(dim // 3, end, theta, ntk_alpha[2])
     return f_freqs_cis, h_freqs_cis, w_freqs_cis
+
+
+def precompute_freqs_cis_ntk(dim: int, end: int = 1024, theta: float = 10000.0, ntk_factor: float = 1.0):
+    # 1d rope precompute
+    theta = theta * ntk_factor
+    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)
+                   [: (dim // 2)].double() / dim))
+    freqs = torch.outer(torch.arange(end, device=freqs.device), freqs)
+    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
+    return freqs_cis
 
 
 def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
@@ -308,6 +318,9 @@ class WanModel(torch.nn.Module):
             f=grid_size[0], h=grid_size[1], w=grid_size[2], 
             x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2]
         )
+    
+    def set_ntk(self, ntk_alpha: list[float] = [1.0, 20.0, 20.0]):
+        self.freqs = precompute_freqs_cis_3d(self.head_dim, ntk_alpha = ntk_alpha)
 
     def forward(self,
                 x: torch.Tensor,
