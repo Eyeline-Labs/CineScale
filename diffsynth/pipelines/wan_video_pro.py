@@ -375,11 +375,12 @@ class WanVideoPipeline_Pro(BasePipeline):
         seed_g = torch.Generator(device=self.device)
         seed_g.manual_seed(seed)
         
+        # target_size_list = [[latents.shape[-3], 120, 208]]
         target_size_list = [[latents.shape[-3], 204, 360]]
 
         for target_size_ in target_size_list:
 
-            new_shift = 11.0 # 5.0 for 720P, 3.0 for 480P
+            new_shift = 9.0 # 5.0 for 720P, 3.0 for 480P
             self.scheduler.set_timesteps(num_inference_steps, denoising_strength=denoising_strength, shift=new_shift)
 
             latents = torch.nn.functional.interpolate(
