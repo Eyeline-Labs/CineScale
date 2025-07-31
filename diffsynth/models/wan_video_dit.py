@@ -302,6 +302,7 @@ class WanModel(torch.nn.Module):
         self.head = Head(dim, out_dim, patch_size, eps)
         head_dim = dim // num_heads
         self.freqs = precompute_freqs_cis_3d(head_dim)
+        self.head_dim = head_dim
 
         if has_image_input:
             self.img_emb = MLP(1280, dim)  # clip_feature_dim = 1280
