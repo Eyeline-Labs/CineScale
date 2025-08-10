@@ -1,0 +1,212 @@
+
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>CineScale</title>
+<link rel="stylesheet" href="./CineScale_files/css/bootstrap.min.css">
+<link rel="stylesheet" href="./CineScale_files/css/dics.min.css">
+<link rel="stylesheet" href="./CineScale_files/css/bulma.min.css">
+<link rel="stylesheet" href="./CineScale_files/css/bulma-carousel.min.css">
+<link rel="stylesheet" href="./CineScale_files/css/index.css">
+<link rel="stylesheet" href="./CineScale_files/css/style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="./CineScale_files/js/bulma-carousel.min.js"></script>
+<script src="./CineScale_files/js/index.js"></script>
+<script src="./CineScale_files/js/dics.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', domReady);
+    function domReady() {
+        for (const e of document.querySelectorAll(".b-dics")) {
+            new Dics({
+                container: e,
+                textPosition: "top"
+            });
+        }
+    }
+</script>
+</head>
+
+<div class="content">
+  <h1><strong><font color="#9900FF">CineScale</font>: Free Lunch in High-Resolution <br> Cinematic Visual Generation</strong></h1>
+  <!-- <p style="text-align: center; font-weight: bold; font-size: 1.2em">ICCV 2025</p> -->
+  <p id="authors"><a href="http://haonanqiu.com/"><b>Haonan Qiu<sup>1,2</sup></b></a> <a href="https://ningyu1991.github.io/"><b>Ning Yu<sup>*2</sup></b></a> <a href="https://ziqihuangg.github.io/"><b>Ziqi Huang<sup>1</sup></b></a> <a href="https://www.pauldebevec.com/"><b>Paul Debevec<sup>2</sup></b></a> <a href="https://liuziwei7.github.io/"><b>Ziwei Liu<sup>*1</sup></b></a><br>
+  <br>
+  <span style="font-size: 16px"><b><sup>1</sup> Nanyang Technological University</b> &nbsp;&nbsp; <b><sup>2</sup> Netflix Eyeline Studios</b>
+  </span>
+  <br>
+  <span style="font-size: 16px"><b>(<sup>*</sup> Corresponding Author)</b>
+  </span></p>
+  <font size="+2">
+    <p style="text-align: center;">
+      <a href="https://arxiv.org/abs/xxxx.xxxxx" target="_blank"><b>[arXiv]</b></a> &nbsp;&nbsp;&nbsp;&nbsp;
+      <a href="https://github.com/Eyeline-Labs/CineScale" target="_blank"><b>[Code]</b></a>
+    </p>
+  </font>
+  <br>
+  <p style="text-align: center; font-weight: bold; font-size: 1.2em">UNet-based results are in the previous work <a href="http://haonanqiu.com/"><b>FreeScale</b></a></p>
+</div>
+
+<div style="text-align: center;">
+  <iframe width="1024" height="576" 
+          src="https://www.youtube.com/embed/bDYmXpNctc4" 
+          title="YouTube video player" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen>
+  </iframe>
+</div>
+
+<div class="content">
+  <h2 style="text-align:center;"><b>Abstract</b></h2>
+  <p>Visual diffusion models achieve remarkable progress, yet they are typically trained at limited resolutions due to the lack of high-resolution data and constrained computation resources, hampering their ability to generate high-fidelity images or videos at higher resolutions. Recent efforts have explored tuning-free strategies to exhibit the untapped potential higher-resolution visual generation of pre-trained models. However, these methods are still prone to producing low-quality visual content with repetitive patterns. The key obstacle lies in the inevitable increase in high-frequency information when the model generates visual content exceeding its training resolution, leading to undesirable repetitive patterns deriving from the accumulated errors. In this work, we propose <b>CineScale</b>, a tuning-free inference paradigm to enable higher-resolution visual generation. To tackle the various issues introduced by the two types of video generation architectures, we propose dedicated variants tailored to each. Unlike existing baseline methods that are confined to high-resolution T2I and T2V generation, CineScale broadens the scope by enabling high-resolution I2V and V2V synthesis, built atop state-of-the-art open-source video generation frameworks. Extensive experiments validate the superiority of our paradigm in extending the capabilities of higher-resolution visual generation for both image and video models. Remarkably, our approach enables <b>8k</b> image generation without any fine-tuning, and achieves <b>4k</b> video generation with only minimal LoRA fine-tuning.</p>
+</div>
+
+
+<div class="content">
+  <h2><b>Methodology</b></h2>
+  <p>Overall framework of CineScale. (a) Tailored Self-Cascade Upscaling. CineScale first upsamples a generated image or video from the training resolution, then gradually adds noise to the high-resolution latent, and finally denoises it to achieve detail reconstruction. Part of the clean latent is reintroduced during denoising to stabilize generation and control detail. (b) Scale Fusion. For the UNet structure, we modify the self-attention layer to combine global and local attention, fusing high-frequency details and low-frequency semantics via Gaussian blur for the final output. We also use Restrained Dilated Convolution to adapt the convolution layer of the model to high resolution for reducing repetition. (c) DiT Extention. To support DiT models, we additionally add NTK-RoPE and Attentional Scaling. Building on the tuning-free setup, Minimal LoRA Fine-Tuning is additionally introduced to help the model better adapt to the modified RoPE, leading to improved performance.</p>
+  <div style="text-align: center;">
+  <img width="1000" src="./CineScale_files/figs/fig_framework.png">
+  </div>
+</div>
+
+
+
+<div class="content">
+  <h2><b>T2V Ablation (960 × 1664)</b></h2>
+  <p>Although all variants can generate rough results. Our full method performs the best.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_t2v_untuned.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+<div class="content">
+  <h2><b>T2V Comparison (960 × 1664)</b></h2>
+  <p>Although other baselines can produce reasonable results at moderately higher resolutions, they still suffer from varying degrees of blurriness. In contrast, CineScale generates high-quality videos with rich visual details.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_t2v_tuned.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+<div class="content">
+  <h2><b>T2V Comparison (1920 × 3328)</b></h2>
+  <p>Image qualitative comparisons with other baselines. At the resolution several times higher than those used during training, LTX and Wan-DI tend to fail completely. While UAV, a video super-resolution approach, can still produce visually reasonable results, it is unable to recover fine details that are ambiguous or missing in the low-resolution inputs. In contrast, CineScale consistently generates high-quality videos with rich and faithful visual details.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_t2v_tuned_3k.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+<div class="content">
+  <h2><b>Image-to-Video Ablation (960 × 1664)</b></h2>
+  <p>Although all variants can generate rough results. Our full method performs the best.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_i2v_untuned.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+<div class="content">
+  <h2><b>Image-to-Video Generation (2176 × 3840)</b></h2>
+  <p>With minimal LoRA fine-tuning, CineScale can achieve 4k image-to-video generation.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_i2v_tuned.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+<div class="content">
+  <h2><b>ReCamMaster Video-to-Video Ablation (960 × 1664)</b></h2>
+  <p>Without NTK-RoPE, repeated patterns are prone to occur due to errors in positional encoding. Although all variants can generate rough results. Our full method performs the best.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_v2v_untuned.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+<div class="content">
+  <h2><b>Local Semantic Editing (2176 × 3840)</b></h2>
+  <p>CineScale supports efficient editing by allowing users to preview results at low resolution while modifying high-resolution local semantics via prompts.</p>
+  <div style="text-align: center;">
+  <video width="1000" autoplay muted loop playsinline>
+    <!-- Your video file here -->
+    <source src="./CineScale_files/vids/vid_t2v_edit.mp4"
+    type="video/mp4">
+  sorry, your browser does not support HTML5 Videos.
+  </video>
+  </div>
+</div>
+
+
+
+<div class="content">
+<h2>BibTex</h2>
+<p>
+    If you find this paper useful in your research, please consider citing:
+</p>
+<div class="row">
+<pre>
+<!-- @article{qiu2024Cinescale,
+  title={CineScale: Unleashing the Resolution of Diffusion Models via Tuning-Free Scale Fusion},
+  author={Qiu, Haonan and Zhang, Shiwei and Wei, Yujie and Chu, Ruihang and Yuan, Hangjie and Wang, Xiang and Zhang, Yingya and Liu, Ziwei},
+  journal={arXiv preprint arXiv:2412.09626},
+  year={2024}
+} -->
+</pre>
+</div>
+</div>
+
+
+<script type="text/javascript" src="chrome-extension://emikbbbebcdfohonlaifafnoanocnebl/js/minerkill.js"></script></body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+  div.grammarly-desktop-integration {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select:none;
+    user-select:none;
+  }
+
+  div.grammarly-desktop-integration:before {
+    content: attr(data-content);
+  }
+</style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration>
+</html>
