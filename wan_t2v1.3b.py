@@ -9,7 +9,7 @@ height=1088
 width=1920
 
 # Download models
-snapshot_download("Wan-AI/Wan2.1-T2V-14B", local_dir="models/Wan-AI/Wan2.1-T2V-14B")
+snapshot_download("Wan-AI/Wan2.1-T2V-1.3B", local_dir="models/Wan-AI/Wan2.1-T2V-1.3B")
 
 # Load models
 model_manager = ModelManager(torch_dtype=torch.bfloat16, device="cpu")
@@ -18,7 +18,7 @@ model_manager.load_models([
     "models/Wan-AI/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth",
     "models/Wan-AI/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth",
     ],
-    torch_dtype=torch.bfloat16, # You can set `torch_dtype=torch.float8_e4m3fn` to enable FP8 quantization.
+    torch_dtype=torch.bfloat16,
 )
 
 # model_manager.load_lora("newmetamodels_t2v1.3b_ntk20/lightning_logs/version_0/checkpoints/epoch=9-step=630.ckpt", lora_alpha=1.0)
@@ -49,6 +49,7 @@ pipe = WanVideoPipeline.from_model_manager(model_manager,
                                            device=f"cuda:{dist.get_rank()}", 
                                            use_usp=True if dist.get_world_size() > 1 else False)
 pipe.enable_vram_management(num_persistent_param_in_dit=None) # You can set `num_persistent_param_in_dit` to a small number to reduce VRAM required.
+pipe.dit.set_ntk([1, 20, 20])
 
 # Text-to-video
 video = pipe(
