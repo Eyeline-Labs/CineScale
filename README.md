@@ -39,11 +39,11 @@ pip install -e .
 ### 1. Higher-Resolution Text-to-Video
 
 ```bash
-  torchrun --standalone --nproc_per_node=8 wan_t2v1.3b_pro.py
+  torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b_pro.py
 ```
 
 ```bash
-  torchrun --standalone --nproc_per_node=8 wan_t2v14b_pro.py
+  torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py
 ```
 
 

@@ -1,0 +1,70 @@
+import torch
+from diffsynth import ModelManager, WanVideoPipeline_Pro, save_video, VideoData
+from modelscope import snapshot_download
+import torch.distributed as dist
+
+# height=480
+# width=832
+height=1088
+width=1920
+
+# Download models
+snapshot_download("Wan-AI/Wan2.1-T2V-14B", local_dir="models/Wan-AI/Wan2.1-T2V-14B")
+
+# Load models
+model_manager = ModelManager(device="cpu")
+model_manager.load_models(
+    [
+        [
+            "models/Wan-AI/Wan2.1-T2V-14B/diffusion_pytorch_model-00001-of-00006.safetensors",
+            "models/Wan-AI/Wan2.1-T2V-14B/diffusion_pytorch_model-00002-of-00006.safetensors",
+            "models/Wan-AI/Wan2.1-T2V-14B/diffusion_pytorch_model-00003-of-00006.safetensors",
+            "models/Wan-AI/Wan2.1-T2V-14B/diffusion_pytorch_model-00004-of-00006.safetensors",
+            "models/Wan-AI/Wan2.1-T2V-14B/diffusion_pytorch_model-00005-of-00006.safetensors",
+            "models/Wan-AI/Wan2.1-T2V-14B/diffusion_pytorch_model-00006-of-00006.safetensors",
+        ],
+        "models/Wan-AI/Wan2.1-T2V-14B/models_t5_umt5-xxl-enc-bf16.pth",
+        "models/Wan-AI/Wan2.1-T2V-14B/Wan2.1_VAE.pth",
+    ],
+    torch_dtype=torch.float8_e4m3fn, # You can set `torch_dtype=torch.bfloat16` to disable FP8 quantization.
+)
+
+# model_manager.load_lora("newmetamodels_t2v1.3b_ntk20/lightning_logs/version_0/checkpoints/epoch=9-step=630.ckpt", lora_alpha=1.0)
+
+dist.init_process_group(
+    backend="nccl",
+    init_method="env://",
+)
+from xfuser.core.distributed import (initialize_model_parallel,
+                                     init_distributed_environment)
+init_distributed_environment(
+    rank=dist.get_rank(), world_size=dist.get_world_size())
+
+initialize_model_parallel(
+    sequence_parallel_degree=dist.get_world_size(),
+    ring_degree=1,
+    ulysses_degree=dist.get_world_size(),
+)
+torch.cuda.set_device(dist.get_rank())
+
+pipe = WanVideoPipeline_Pro.from_model_manager(model_manager, 
+                                           torch_dtype=torch.bfloat16, 
+                                           device=f"cuda:{dist.get_rank()}", 
+                                           use_usp=True if dist.get_world_size() > 1 else False)
+pipe.enable_vram_management(num_persistent_param_in_dit=None) # You can set `num_persistent_param_in_dit` to a small number to reduce VRAM required.
+
+# Text-to-video
+videos = pipe(
+    prompt="In a lush, verdant garden, a magnificent peacock stands proudly, its iridescent feathers shimmering in the sunlight. The camera captures a close-up of its vibrant blue and green plumage, each feather a masterpiece of nature's artistry. As the peacock begins to strut, its tail fans out in a breathtaking display, the intricate patterns resembling a living tapestry. The gentle rustle of its feathers accompanies its graceful movements, while the surrounding foliage provides a serene backdrop. The peacock pauses, its head held high, showcasing its regal elegance amidst the tranquil garden setting.",
+    negative_prompt="Bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards",
+    num_inference_steps=50,
+    seed=0, tiled=True,
+    height=height, 
+    width=width,
+    num_frames=81,
+    sigma_shift=7.0,
+    cfg_scale=5.0,
+)
+if dist.get_rank() == 0:
+    for video_id, video in enumerate(videos):
+        save_video(video, "video_{}.mp4".format(video_id), fps=15)
