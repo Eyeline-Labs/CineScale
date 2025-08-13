@@ -40,13 +40,19 @@ pip install -e .
 
 Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/tree/main) and put it the folder `models`.
 
-### 1. 3K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
+### 1. 2K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
+
+```bash
+  torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b.py
+```
+
+### 2. 3K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b_pro.py
 ```
 
-### 2. 4K-Resolution Text-to-Video (Base Model Wan2.1-14B)
+### 3. 4K-Resolution Text-to-Video (Base Model Wan2.1-14B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py
