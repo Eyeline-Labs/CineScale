@@ -13,7 +13,7 @@ _**[Haonan Qiu](http://haonanqiu.com/), [Ning Yu*](https://ningyu1991.github.io/
 From Nanyang Technological University and Netflix Eyeline Studios.
 
 [![Watch the video](https://img.youtube.com/vi/bDYmXpNctc4/0.jpg)](https://www.youtube.com/watch?v=bDYmXpNctc4).     
-(Click to enjoy 4k demo)
+(Click to enjoy 4k demo 📹)
 </div>
 
 
