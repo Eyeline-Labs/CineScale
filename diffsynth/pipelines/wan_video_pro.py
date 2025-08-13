@@ -281,6 +281,12 @@ class WanVideoPipeline_Pro(BasePipeline):
         tea_cache_model_id="",
         progress_bar_cmd=tqdm,
         progress_bar_st=None,
+        new_shift=9.0,
+        ntk_first=20.0,
+        ntk_second=25.0,
+        target_height=1632,
+        target_width=2880,
+        **kwargs
     ):
         # Parameter check
         height, width = self.check_resize_height_width(height, width)
@@ -341,7 +347,7 @@ class WanVideoPipeline_Pro(BasePipeline):
         usp_kwargs = self.prepare_unified_sequence_parallel()
 
         restart_step = 15
-        self.dit.set_ntk([1.0, 20.0, 20.0])
+        self.dit.set_ntk([1.0, ntk_first, ntk_first])
         latents_list = []
 
         # Denoise
@@ -375,12 +381,10 @@ class WanVideoPipeline_Pro(BasePipeline):
         seed_g = torch.Generator(device=self.device)
         seed_g.manual_seed(seed)
         
-        # target_size_list = [[latents.shape[-3], 120, 208]]
-        target_size_list = [[latents.shape[-3], 204, 360]]
+        target_size_list = [[latents.shape[-3], int(target_height/8), int(target_width/8)]]
 
         for target_size_ in target_size_list:
 
-            new_shift = 9.0 # 5.0 for 720P, 3.0 for 480P
             self.scheduler.set_timesteps(num_inference_steps, denoising_strength=denoising_strength, shift=new_shift)
 
             latents = torch.nn.functional.interpolate(
@@ -412,7 +416,7 @@ class WanVideoPipeline_Pro(BasePipeline):
             latents = noise_latents[restart_step]
 
             self.scheduler._step_index = 0
-            self.dit.set_ntk([1.0, 25.0, 25.0])
+            self.dit.set_ntk([1.0, ntk_second, ntk_second])
 
             for progress_id, timestep in enumerate(progress_bar_cmd(self.scheduler.timesteps)):
 

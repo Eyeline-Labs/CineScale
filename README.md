@@ -12,8 +12,8 @@ _**[Haonan Qiu](http://haonanqiu.com/), [Ning Yu*](https://ningyu1991.github.io/
 
 From Nanyang Technological University and Netflix Eyeline Studios.
 
-[![Watch the video](https://img.youtube.com/vi/bDYmXpNctc4/0.jpg)](https://www.youtube.com/watch?v=bDYmXpNctc4)
-(Click for 4k Demo)
+[![Watch the video](https://img.youtube.com/vi/bDYmXpNctc4/0.jpg)](https://www.youtube.com/watch?v=bDYmXpNctc4).     
+(Click to enjoy 4k demo)
 </div>
 
 
@@ -32,15 +32,21 @@ pip install -e .
 
 |Model|Tuning Resolution|Checkpoint|Description
 |:---------|:---------|:--------|:--------|
-|CineScale-1.3B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/tree/main/t2v_1.3b_ntk20)|Support 3k(1920x3328) inference on A100 x 1
-|CineScale-14B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/tree/main/t2v_14b_ntk20)|Support 4k(2176x3840) inference on A100 x 8
+|CineScale-1.3B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/blob/main/t2v_1.3b_ntk20.ckpt)|Support 3k(1632x2880) inference on A100 x 1
+|CineScale-14B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/blob/main/t2v_14b_ntk20.ckpt)|Support 4k(2176x3840) inference on A100 x 8
 
 ## 💫 Inference with Command
-### 1. Higher-Resolution Text-to-Video
+### 0. Model Preparation
+
+Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/tree/main) and put it the folder `models`.
+
+### 1. 3K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b_pro.py
 ```
+
+### 2. 4K-Resolution Text-to-Video (Base Model Wan2.1-14B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py

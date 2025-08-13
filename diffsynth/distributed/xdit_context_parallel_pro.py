@@ -119,7 +119,7 @@ def usp_attn_forward(self, x, freqs):
 
     if q.shape == v.shape:
         new_size = q.shape[1] / 21 * 8
-        if new_size > 5000: 
+        if new_size > 10000: 
             attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
             # attention_scale = None
         else:
