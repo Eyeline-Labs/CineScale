@@ -5,55 +5,46 @@ import math
 from typing import Tuple, Optional
 from einops import rearrange
 from .utils import hash_state_dict_keys
-try:
-    import flash_attn_interface
-    FLASH_ATTN_3_AVAILABLE = True
-except ModuleNotFoundError:
-    FLASH_ATTN_3_AVAILABLE = False
 
 try:
     import flash_attn
     FLASH_ATTN_2_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
-
-try:
-    from sageattention import sageattn
-    SAGE_ATTN_AVAILABLE = True
-except ModuleNotFoundError:
-    SAGE_ATTN_AVAILABLE = False
     
     
 def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
-    if compatibility_mode:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = F.scaled_dot_product_attention(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    elif FLASH_ATTN_3_AVAILABLE:
+    if FLASH_ATTN_2_AVAILABLE:
         q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
         k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
         v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
-        x = flash_attn_interface.flash_attn_func(q, k, v)
+
+        if q.shape == v.shape:  # self-attention
+            new_size = q.shape[1] / 21
+            if new_size > 20000: 
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
+            elif new_size > 10000: 
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 1.5), (45 * 80))
+            else:
+                attention_scale = None
+
+        x = flash_attn.flash_attn_func(q, k, v, softmax_scale=attention_scale)
         x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
-    elif FLASH_ATTN_2_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
-        x = flash_attn.flash_attn_func(q, k, v)
-        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
-    elif SAGE_ATTN_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = sageattn(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
     else:
         q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
         k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
         v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = F.scaled_dot_product_attention(q, k, v)
+
+        if q.shape == v.shape:  # self-attention
+            new_size = q.shape[1] / 21
+            if new_size > 20000: 
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
+            elif new_size > 10000: 
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 1.5), (45 * 80))
+            else:
+                attention_scale = None
+
+        x = F.scaled_dot_product_attention(q, k, v, softmax_scale=attention_scale)
         x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
     return x
 

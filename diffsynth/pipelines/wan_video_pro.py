@@ -163,7 +163,7 @@ class WanVideoPipeline_Pro(BasePipeline):
         pipe.fetch_models(model_manager)
         if use_usp:
             from xfuser.core.distributed import get_sequence_parallel_world_size
-            from ..distributed.xdit_context_parallel_pro import usp_attn_forward, usp_dit_forward
+            from ..distributed.xdit_context_parallel import usp_attn_forward, usp_dit_forward
 
             for block in pipe.dit.blocks:
                 block.self_attn.forward = types.MethodType(usp_attn_forward, block.self_attn)
