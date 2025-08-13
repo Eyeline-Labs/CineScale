@@ -36,23 +36,23 @@ pip install -e .
 |CineScale-14B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/blob/main/t2v_14b_ntk20.ckpt)|Support 4k(2176x3840) inference on A100 x 8
 
 ## 💫 Inference with Command
-### 0. Model Preparation
+### Model Preparation
 
 Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/tree/main) and put it the folder `models`.
 
-### 1. 2K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
+### 2K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b.py
 ```
 
-### 2. 3K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
+### 3K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b_pro.py
 ```
 
-### 3. 4K-Resolution Text-to-Video (Base Model Wan2.1-14B)
+### 4K-Resolution Text-to-Video (Base Model Wan2.1-14B)
 
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py
