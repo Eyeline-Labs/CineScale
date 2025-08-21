@@ -120,9 +120,11 @@ def usp_attn_forward(self, x, freqs):
     if q.shape == v.shape:  # self-attention
         new_size = q.shape[1] / 21 * 8
         if new_size > 20000: 
-            attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
+            attention_coef = 2
+            attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * attention_coef), (45 * 80))
         elif new_size > 10000: 
-            attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 1.5), (45 * 80))
+            attention_coef = 1.5
+            attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * attention_coef), (45 * 80))
         else:
             attention_scale = None
     else:

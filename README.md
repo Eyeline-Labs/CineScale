@@ -26,6 +26,8 @@ conda activate cinescale
 git clone https://github.com/Eyeline-Labs/CineScale.git
 cd CineScale
 pip install -e .
+pip install xfuser>=0.4.3
+pip install flash-attn --no-build-isolation
 ```
 
 ## 🧰 Models
@@ -34,6 +36,7 @@ pip install -e .
 |:---------|:---------|:--------|:--------|
 |CineScale-1.3B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/blob/main/t2v_1.3b_ntk20.ckpt)|Support 3k(1632x2880) inference on A100 x 1
 |CineScale-14B-T2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/blob/main/t2v_14b_ntk20.ckpt)|Support 4k(2176x3840) inference on A100 x 8
+|CineScale-14B-I2V (Text2Video)|1088x1920|[Hugging Face](https://huggingface.co/Eyeline-Labs/CineScale/blob/main/i2v_14b_ntk20.ckpt)|Support 4k(2176x3840) inference on A100 x 8
 
 ## 💫 Inference with Command
 ### Model Preparation

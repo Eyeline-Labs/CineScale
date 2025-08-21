@@ -22,11 +22,15 @@ def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads
         if q.shape == v.shape:  # self-attention
             new_size = q.shape[1] / 21
             if new_size > 20000: 
-                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
+                attention_coef = 2
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * attention_coef), (45 * 80))
             elif new_size > 10000: 
-                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 1.5), (45 * 80))
+                attention_coef = 1.5
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * attention_coef), (45 * 80))
             else:
                 attention_scale = None
+        else:
+            attention_scale = None
 
         x = flash_attn.flash_attn_func(q, k, v, softmax_scale=attention_scale)
         x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
@@ -38,11 +42,15 @@ def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads
         if q.shape == v.shape:  # self-attention
             new_size = q.shape[1] / 21
             if new_size > 20000: 
-                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 2), (45 * 80))
+                attention_coef = 2
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * attention_coef), (45 * 80))
             elif new_size > 10000: 
-                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * 1.5), (45 * 80))
+                attention_coef = 1.5
+                attention_scale =  1 / math.sqrt(q.size(-1)) * math.log((45 * 80 * attention_coef), (45 * 80))
             else:
                 attention_scale = None
+        else:
+            attention_scale = None
 
         x = F.scaled_dot_product_attention(q, k, v, softmax_scale=attention_scale)
         x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
