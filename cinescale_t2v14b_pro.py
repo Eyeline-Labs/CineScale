@@ -72,4 +72,4 @@ videos = pipe(
 )
 if dist.get_rank() == 0:
     for video_id, video in enumerate(videos):
-        save_video(video, "video_w{}_{}.mp4".format(target_width, video_id), fps=15)
+        save_video(video, "video_t2v_w{}_{}.mp4".format(target_width, video_id), fps=15)

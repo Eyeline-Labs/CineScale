@@ -45,6 +45,11 @@ Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/
 
 ### 2K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
 
+Single GPU
+```bash
+  CUDA_VISIBLE_DEVICES=0 python cinescale_t2v1.3b.py
+```
+Multiple GPUs
 ```bash
   torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b.py
 ```
