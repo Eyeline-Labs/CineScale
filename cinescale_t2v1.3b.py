@@ -62,4 +62,4 @@ video = pipe(
     sigma_shift=7.0,
 )
 if dist.get_rank() == 0:
-    save_video(video, "video_w{}.mp4".format(width), fps=15)
+    save_video(video, "video_t2v_w{}.mp4".format(width), fps=15)

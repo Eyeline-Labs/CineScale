@@ -21,13 +21,14 @@ From Nanyang Technological University and Netflix Eyeline Studios.
 
 ### Install Environment via Anaconda
 ```bash
-conda create -n cinescale python=3.10
-conda activate cinescale
 git clone https://github.com/Eyeline-Labs/CineScale.git
 cd CineScale
+
+conda create -n cinescale python=3.10
+conda activate cinescale
 pip install -e .
 pip install xfuser>=0.4.3
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.7.4.post1 --no-build-isolation
 ```
 
 ## 🧰 Models
