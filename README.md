@@ -47,7 +47,7 @@ Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/
 
 Single GPU
 ```bash
-  CUDA_VISIBLE_DEVICES=0 python cinescale_t2v1.3b.py
+  CUDA_VISIBLE_DEVICES=0 python cinescale_t2v1.3b_single.py
 ```
 Multiple GPUs
 ```bash
