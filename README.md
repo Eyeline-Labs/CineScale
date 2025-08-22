@@ -3,7 +3,7 @@
 ### CineScale is an extended work of [FreeScale](https://github.com/ali-vilab/FreeScale) for higher-resolution visual generation, unlocking the 4k video generation!
 
 <div align="center">
- <a href='https://arxiv.org/abs/2412.09626'><img src='https://img.shields.io/badge/arXiv-2412.09626-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ <a href='https://arxiv.org/abs/2508.15774'><img src='https://img.shields.io/badge/arXiv-2508.15774-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  <a href='https://eyeline-labs.github.io/CineScale/'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
 
 _**[Haonan Qiu](http://haonanqiu.com/), [Ning Yu*](https://ningyu1991.github.io/), [Ziqi Huang](https://ziqihuangg.github.io/), [Paul Debevec](https://www.pauldebevec.com/), and [Ziwei Liu*](https://liuziwei7.github.io/)**_
@@ -61,6 +61,12 @@ Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/
   torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py
 ```
 
+### 4K-Resolution Image-to-Video (Base Model Wan2.1-14B)
+
+```bash
+  torchrun --standalone --nproc_per_node=8 cinescale_i2v14b.py
+```
+
 
 ## 🤗 Acknowledgements
 This codebase is built on top of the open-source implementation of [Wan2.1](https://github.com/Wan-Video/Wan2.1) based on [DiffSynth-Studio](https://github.com/modelscope/DiffSynth-Studio/tree/main/examples/wanvideo) repo.
@@ -68,9 +74,9 @@ This codebase is built on top of the open-source implementation of [Wan2.1](http
 ## 😉 Citation
 ```bib
 @article{qiu2025cinescale,
-  title={CineScale: Free Lunch in High-Resolution Cinematic Visual Generation},
-  author={Haonan Qiu, Ning Yu, Ziqi Huang, Paul Debevec, Ziwei Liu},
-  journal={arXiv preprint arXiv:2412.09626},
-  year={2024}
+  title={CineScale: Free Lunch in High-Resolution Cinematic Visual Generation}, 
+  author={Haonan Qiu and Ning Yu and Ziqi Huang and Paul Debevec and Ziwei Liu},
+  journal={arXiv preprint arXiv:2508.15774},
+  year={2025}
 }
 ```
