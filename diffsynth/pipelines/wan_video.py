@@ -199,6 +199,7 @@ class WanVideoPipeline(BasePipeline):
         msk = msk.transpose(1, 2)[0]
         
         y = self.vae.encode([vae_input.to(dtype=self.torch_dtype, device=self.device)], device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)[0]
+        y = y.to(dtype=self.torch_dtype, device=self.device)
         y = torch.concat([msk, y])
         y = y.unsqueeze(0)
         clip_context = clip_context.to(dtype=self.torch_dtype, device=self.device)
