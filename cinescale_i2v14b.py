@@ -58,7 +58,7 @@ pipe.enable_vram_management(num_persistent_param_in_dit=None) # You can set `num
 height=2176
 width=3840
 pipe.dit.set_ntk([1, 20, 20])
-# may set attention_scale to 1.5
+# may set attention_scale to 1.5 (diffsynth/distributed/xdit_context_parallel.py)
 
 prompt = "a brown bear in the water with a fish in its mouth"
 image = Image.open("./assets/a brown bear in the water with a fish in its mouth.jpg")
@@ -69,7 +69,7 @@ video = pipe(
     negative_prompt="Bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards",
     input_image=image,
     num_inference_steps=50,
-    seed=123, tiled=True,
+    seed=0, tiled=True,
     height=height, 
     width=width,
     num_frames=81,
