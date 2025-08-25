@@ -48,29 +48,31 @@ Download the checkpoint from [Hugging Face](https://huggingface.co/Eyeline-Labs/
 
 Single GPU
 ```bash
-  CUDA_VISIBLE_DEVICES=0 python cinescale_t2v1.3b_single.py
+CUDA_VISIBLE_DEVICES=0 python cinescale_t2v1.3b_single.py
 ```
 Multiple GPUs
 ```bash
-  torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b.py
+torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b.py
 ```
 
 ### 3K-Resolution Text-to-Video (Base Model Wan2.1-1.3B)
 
 ```bash
-  torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b_pro.py
+torchrun --standalone --nproc_per_node=8 cinescale_t2v1.3b_pro.py
 ```
 
 ### 4K-Resolution Text-to-Video (Base Model Wan2.1-14B)
 
 ```bash
-  torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py
+torchrun --standalone --nproc_per_node=8 cinescale_t2v14b_pro.py
 ```
 
 ### 4K-Resolution Image-to-Video (Base Model Wan2.1-14B)
 
 ```bash
-  torchrun --standalone --nproc_per_node=8 cinescale_i2v14b.py
+# May set attention_coef to 1.5 for better results (line 123, diffsynth/distributed/xdit_context_parallel.py)
+
+torchrun --standalone --nproc_per_node=8 cinescale_i2v14b.py
 ```
 
 
