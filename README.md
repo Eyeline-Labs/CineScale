@@ -4,16 +4,13 @@
 > **Note:** This repository is under construction. 
 
 
-<table align="center">
-  <tr>
-    <td align="center" valign="middle">
-      <img src="Figures/Logo.png" alt="CineScale logo" width="125">
-    </td>
-    <td align="left" valign="middle">
-      <h1>CineScale:<br>Open-Sourcing Tuning-Free<br>High-Resolution Video Generation</h1>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Figures/CineScale_Header_Dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="Figures/CineScale_Header_Light.png">
+    <img src="Figures/CineScale_Header_Light.png" alt="CineScale: Open-Sourcing Tuning-Free High-Resolution Video Generation" width="100%">
+  </picture>
+</p>
 
 <p align="center">
   <a href="https://gordonchen19.github.io">Gordon Chen</a><sup>†</sup>,
