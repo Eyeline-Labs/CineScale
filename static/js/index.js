@@ -508,7 +508,21 @@ $(document).ready(function() {
         video.loop = true;
       });
 
+      const loadVideo = (video) => {
+        if (video.getAttribute('src')) {
+          return;
+        }
+        const source = video.dataset.src;
+        if (!source) {
+          return;
+        }
+        video.src = source;
+        video.preload = 'auto';
+        video.load();
+      };
+
       const playVideo = (video) => {
+        loadVideo(video);
         const playPromise = video.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch(() => {});
@@ -526,7 +540,7 @@ $(document).ready(function() {
           });
         }, {
           root: viewport,
-          rootMargin: '50%',
+          rootMargin: '100%',
         });
         videos.forEach((video) => videoObserver.observe(video));
       } else {
