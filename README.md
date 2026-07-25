@@ -29,16 +29,16 @@
 </p>
 
 
-From Nanyang Technological University and Netflix Eyeline Studios.
+<p align="center">From Nanyang Technological University and Netflix Eyeline Studios.</p>
 
 
-## TL;DR
+## ⚡ TL;DR
 
 Most video generators are trained at limited spatial resolutions due to the scarcity of high-resolution 4K video data and the prohibitive computational cost of large-scale training on such data. Most video diffusion models are trained on 720p videos and are therefore effectively limited to generating videos at similar resolutions during inference. To address this gap, we propose CineScale. CineScale, to the best of our knowledge, is the first tuning-free inference framework enabling pretrained video diffusion models to generate high-fidelity videos at resolutions far beyond those encountered during training, without any fine-tuning.
 
 CineScale unlocks tuning-free 4K video generation ([Watch our Video Demo here](https://eyeline-labs.github.io/CineScale/))!
 
-## Qualitative Results
+## 🎬 Qualitative Results
 
 <p align="center">
   <img src="Figures/Teaser_2.png" alt="Qualitative 4K video generation results from CineScale" width="100%">
@@ -53,7 +53,7 @@ CineScale unlocks tuning-free 4K video generation ([Watch our Video Demo here](h
 <p align="center"><em>Qualitative comparison with existing video generation models.</em></p>
 
 
-## Quantitative Results
+## 📊 Quantitative Results
 
 CineScale substantially improves perceptual quality at high resolution, with
 the strongest gains in aesthetic and imaging quality. Subject consistency,
