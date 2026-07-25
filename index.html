@@ -1,212 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" type="image/png" href="static/images/Logo.png">
 
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>CineScale</title>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet">
 
-<title>CineScale</title>
-<link rel="stylesheet" href="./CineScale_files/css/bootstrap.min.css">
-<link rel="stylesheet" href="./CineScale_files/css/dics.min.css">
-<link rel="stylesheet" href="./CineScale_files/css/bulma.min.css">
-<link rel="stylesheet" href="./CineScale_files/css/bulma-carousel.min.css">
-<link rel="stylesheet" href="./CineScale_files/css/index.css">
-<link rel="stylesheet" href="./CineScale_files/css/style.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="./CineScale_files/js/bulma-carousel.min.js"></script>
-<script src="./CineScale_files/js/index.js"></script>
-<script src="./CineScale_files/js/dics.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', domReady);
-    function domReady() {
-        for (const e of document.querySelectorAll(".b-dics")) {
-            new Dics({
-                container: e,
-                textPosition: "top"
-            });
-        }
-    }
-</script>
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
 </head>
-
-<div class="content">
-  <h1><strong><font color="#9900FF">CineScale</font>: Free Lunch in High-Resolution <br> Cinematic Visual Generation</strong></h1>
-  <!-- <p style="text-align: center; font-weight: bold; font-size: 1.2em">ICCV 2025</p> -->
-  <p id="authors"><a href="http://haonanqiu.com/"><b>Haonan Qiu<sup>1,2</sup></b></a> <a href="https://ningyu1991.github.io/"><b>Ning Yu<sup>*2</sup></b></a> <a href="https://ziqihuangg.github.io/"><b>Ziqi Huang<sup>1</sup></b></a> <a href="https://www.pauldebevec.com/"><b>Paul Debevec<sup>2</sup></b></a> <a href="https://liuziwei7.github.io/"><b>Ziwei Liu<sup>*1</sup></b></a><br>
-  <br>
-  <span style="font-size: 16px"><b><sup>1</sup> Nanyang Technological University</b> &nbsp;&nbsp; <b><sup>2</sup> Netflix Eyeline Studios</b>
-  </span>
-  <br>
-  <span style="font-size: 16px"><b>(<sup>*</sup> Corresponding Author)</b>
-  </span></p>
-  <font size="+2">
-    <p style="text-align: center;">
-      <a href="https://arxiv.org/abs/2508.15774" target="_blank"><b>[arXiv]</b></a> &nbsp;&nbsp;&nbsp;&nbsp;
-      <a href="https://github.com/Eyeline-Labs/CineScale" target="_blank"><b>[Code]</b></a>
-    </p>
-  </font>
-  <br>
-  <p style="text-align: center; font-weight: bold; font-size: 1.2em">UNet-based results are in the previous work <a href="http://haonanqiu.com/projects/FreeScale.html"><b>FreeScale</b></a></p>
-</div>
-
-<div style="text-align: center;">
-  <iframe width="1024" height="576" 
-          src="https://www.youtube.com/embed/bDYmXpNctc4" 
-          title="YouTube video player" 
-          frameborder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-          allowfullscreen>
-  </iframe>
-</div>
-
-<div class="content">
-  <h2 style="text-align:center;"><b>Abstract</b></h2>
-  <p>Visual diffusion models achieve remarkable progress, yet they are typically trained at limited resolutions due to the lack of high-resolution data and constrained computation resources, hampering their ability to generate high-fidelity images or videos at higher resolutions. Recent efforts have explored tuning-free strategies to exhibit the untapped potential higher-resolution visual generation of pre-trained models. However, these methods are still prone to producing low-quality visual content with repetitive patterns. The key obstacle lies in the inevitable increase in high-frequency information when the model generates visual content exceeding its training resolution, leading to undesirable repetitive patterns deriving from the accumulated errors. In this work, we propose <b>CineScale</b>, a novel inference paradigm to enable higher-resolution visual generation. To tackle the various issues introduced by the two types of video generation architectures, we propose dedicated variants tailored to each. Unlike existing baseline methods that are confined to high-resolution T2I and T2V generation, CineScale broadens the scope by enabling high-resolution I2V and V2V synthesis, built atop state-of-the-art open-source video generation frameworks. Extensive experiments validate the superiority of our paradigm in extending the capabilities of higher-resolution visual generation for both image and video models. Remarkably, our approach enables <b>8k</b> image generation without any fine-tuning, and achieves <b>4k</b> video generation with only minimal LoRA fine-tuning.</p>
-</div>
+<body>
 
 
-<div class="content">
-  <h2><b>Methodology</b></h2>
-  <p>Overall framework of CineScale. (a) Tailored Self-Cascade Upscaling. CineScale first upsamples a generated image or video from the training resolution, then gradually adds noise to the high-resolution latent, and finally denoises it to achieve detail reconstruction. Part of the clean latent is reintroduced during denoising to stabilize generation and control detail. (b) Scale Fusion. For the UNet structure, we modify the self-attention layer to combine global and local attention, fusing high-frequency details and low-frequency semantics via Gaussian blur for the final output. We also use Restrained Dilated Convolution to adapt the convolution layer of the model to high resolution for reducing repetition. (c) DiT Extention. To support DiT models, we additionally add NTK-RoPE and Attentional Scaling. Building on the tuning-free setup, Minimal LoRA Fine-Tuning is additionally introduced to help the model better adapt to the modified RoPE, leading to improved performance.</p>
-  <div style="text-align: center;">
-  <img width="1000" src="./CineScale_files/figs/fig_framework.png">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              <img src="static/images/Logo.png" alt="Logo" class="title-logo">
+              <span class="publication-title-text">Cine<span class="title-accent">Scale</span>: Open-Sourcing Tuning-Free High-Resolution Video Generation</span>
+            </h1>
+
+            <div class="is-size-5 publication-authors">
+              <!-- Paper authors -->
+              <span class="author-block">
+                <a href="https://gordonchen19.github.io/" target="_blank">Gordon Chen</a><sup class="author-sup">1,*</sup>,</span>
+              <span class="author-block">
+                <a href="http://haonanqiu.com" target="_blank">Haonan Qiu</a><sup class="author-sup">1,2,*</sup>,</span>
+              <span class="author-block">
+                <a href="https://ningyu1991.github.io" target="_blank">Ning Yu</a><sup class="author-sup">2,&#9993;</sup>,</span>
+              <span class="author-block">
+                <a href="https://ziqihuangg.github.io" target="_blank">Ziqi Huang</a><sup class="author-sup">1</sup>,</span>
+              <span class="author-block">
+                <a href="https://www.pauldebevec.com" target="_blank">Paul Debevec</a><sup class="author-sup">2</sup>,</span>
+              <span class="author-block">
+                <a href="https://liuziwei7.github.io" target="_blank">Ziwei Liu</a><sup class="author-sup">1,&#9993;</sup>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors affiliation-row">
+              <span class="author-block affiliation"><sup class="author-sup">1</sup>S-Lab, Nanyang Technological University</span>
+              <span class="author-block affiliation"><sup class="author-sup">2</sup>Netflix Eyeline Studios</span>
+            </div>
+            <div class="publication-authors author-note">
+              <span><sup class="author-sup">*</sup>Equal contribution</span>
+              <span><sup class="author-sup">&#9993;</sup>Corresponding authors</span>
+            </div>
+
+                  <div class="column has-text-centered">
+                    <div class="publication-links">
+
+                  <!-- Github link -->
+                  <span class="link-block">
+                    <a href="https://github.com/Eyeline-Labs/CineScale" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+
+                <!-- arXiv link -->
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2508.15774" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+
+            </div>
+
+            <div class="publication-video cinescale-youtube">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/WMK8aZtKAec"
+                title="CineScale supplementary video"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+              </iframe>
+            </div>
+            <p class="youtube-caption">Watch in 4K</p>
+
+            
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-
-
-<div class="content">
-  <h2><b>Text-to-Video Ablation (960 × 1664)</b></h2>
-  <p>Although all variants can generate rough results. Our full method performs the best.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_t2v_untuned.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
+<!-- Paper abstract -->
+<section class="section hero is-dark">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 has-text-centered has-text-white">CineScale is now integrated into <a href="https://github.com/Wan-Video/Wan2.2">Wan</a> 🎉</h2>
+        <br><br>
+        <div class="content">
+           <h2 class="title is-3 has-text-centered has-text-white">TL;DR</h2>
+          <p class="tldr-summary">
+            Most video generators are trained at limited spatial resolutions due to the scarcity of high-resolution 4K video data and the prohibitive computational cost of large-scale training on such data. Most video diffusion models are trained on 720p videos and are therefore effectively limited to generating videos at similar resolutions during inference. To address this gap, we propose CineScale. CineScale, to the best of our knowledge, is the first tuning-free inference framework enabling pretrained video diffusion models to generate high-fidelity videos at resolutions far beyond those encountered during training, without any fine-tuning.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
+<!-- End paper abstract -->
 
+<!-- Pipeline section -->
 
-<div class="content">
-  <h2><b>Text-to-Video Comparison (960 × 1664)</b></h2>
-  <p>Although other baselines can produce reasonable results at moderately higher resolutions, they still suffer from varying degrees of blurriness. In contrast, CineScale generates high-quality videos with rich visual details.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_t2v_tuned.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+      
+        <div class="content has-text-justified">
+
+          <figure class="pipeline-figure paper-figure-card">
+            <a class="paper-figure-frame" href="static/figures/fig_framework_panel.png" target="_blank" aria-label="Open the framework figure at full resolution">
+              <img
+                src="static/figures/fig_framework_panel.png"
+                alt="CineScale framework with tiled self-attention and Adaptively Rectified RoPE"
+              />
+            </a>
+            <figcaption>Framework overview: tiled self-attention with Adaptively Rectified RoPE.</figcaption>
+          </figure>
+          <h2 class="title is-3 has-text-centered has-text-white">Method</h2>
+          <p>
+            CineScale enables pretrained video diffusion models to generate far beyond their native training resolution without retraining. It partitions query tokens into spatial tiles while retaining access to all global keys and values, then uses Adaptively Rectified RoPE to preserve precise local geometry and keep long-range positional offsets within the range supported by the pretrained model.
+          </p>
+
+          <div class="method-collapsible" data-method-collapsible>
+            <div class="method-content" hidden>
+              <h3 class="title is-4 has-text-centered has-text-white">Tiled Self-Attention</h3>
+              <p>
+                We partition the query tokens into <em>M</em> non-overlapping tiles {T<sub>m</sub>}<sup>M</sup><sub>m=1</sub>, with each tile covering the same spatial region across every video frame. If I<sub>m</sub> contains the token indices assigned to tile m, its queries are:
+              </p>
+              <div class="equation">Q<sub>m</sub> = Q[I<sub>m</sub>, :]</div>
+              <p>
+                Each query tile attends to the complete set of keys and values from the video. Tiling therefore reduces the query-side working set without restricting global context:
+              </p>
+              <div class="equation">O<sub>m</sub> = Softmax(<span class="frac"><span class="num">Q&#771;<sub>m</sub>(K&#771;<sub>all</sub><sup>(m)</sup>)<sup>T</sup></span><span class="den">&radic;d<sub>h</sub></span></span>) V<sub>all</sub></div>
+              <p>
+                Here, Q&#771;<sub>m</sub> and K&#771;<sub>all</sub><sup>(m)</sup> are the positionally encoded queries and global keys, V<sub>all</sub> contains every value token, and d<sub>h</sub> is the attention-head dimension. With standard RoPE, processing the query tiles independently and concatenating their outputs is mathematically equivalent to conventional global self-attention. The tile outputs are scattered back to their original locations as O[I<sub>m</sub>, :] = O<sub>m</sub>. CineScale changes only how the global keys are positionally encoded for each tile.
+              </p>
+
+              <h3 class="title is-4 has-text-centered has-text-white">Adaptively Rectified RoPE</h3>
+              <p>
+                At high resolutions, standard RoPE encounters relative spatial offsets far outside its training distribution. For every query tile, Adaptively Rectified RoPE leaves nearby key coordinates unchanged and linearly compresses more distant coordinates toward the tile.
+              </p>
+              <p>
+                Consider a vertical key coordinate p<sub>y</sub> in [0, L<sub>y</sub> - 1]. Let [&ell;<sub>y</sub><sup>(m)</sup>, u<sub>y</sub><sup>(m)</sup>] be the vertical extent of tile m, D<sub>y</sub><sup>(m)</sup> = u<sub>y</sub><sup>(m)</sup> - &ell;<sub>y</sub><sup>(m)</sup> its height, and R<sub>y</sub> the largest relative offset supported by the pretrained model. The remaining external positional budget is:
+              </p>
+              <div class="equation">B<sub>y</sub><sup>(m)</sup> = R<sub>y</sub> - D<sub>y</sub><sup>(m)</sup></div>
+              <p>
+                Given a local preservation threshold &tau;<sub>y</sub>, the unchanged margins on either side of the tile are:
+              </p>
+              <div class="equation">
+                &delta;<sub>y,-</sub><sup>(m)</sup> = min(&tau;<sub>y</sub>, &ell;<sub>y</sub><sup>(m)</sup>, B<sub>y</sub><sup>(m)</sup>),<br>
+                &delta;<sub>y,+</sub><sup>(m)</sup> = min(&tau;<sub>y</sub>, L<sub>y</sub> - 1 - u<sub>y</sub><sup>(m)</sup>, B<sub>y</sub><sup>(m)</sup>)
+              </div>
+              <p>
+                These margins define the interval [&kappa;<sub>y,-</sub><sup>(m)</sup>, &kappa;<sub>y,+</sub><sup>(m)</sup>] whose coordinates remain unchanged:
+              </p>
+              <div class="equation">
+                &kappa;<sub>y,-</sub><sup>(m)</sup> = &ell;<sub>y</sub><sup>(m)</sup> - &delta;<sub>y,-</sub><sup>(m)</sup>,<br>
+                &kappa;<sub>y,+</sub><sup>(m)</sup> = u<sub>y</sub><sup>(m)</sup> + &delta;<sub>y,+</sub><sup>(m)</sup>
+              </div>
+              <p>
+                Coordinates outside that interval are compressed toward the target endpoints &gamma;<sub>y,-</sub><sup>(m)</sup> and &gamma;<sub>y,+</sub><sup>(m)</sup>:
+              </p>
+              <div class="equation">
+                &gamma;<sub>y,-</sub><sup>(m)</sup> = max(0, u<sub>y</sub><sup>(m)</sup> - R<sub>y</sub>),<br>
+                &gamma;<sub>y,+</sub><sup>(m)</sup> = min(L<sub>y</sub> - 1, &ell;<sub>y</sub><sup>(m)</sup> + R<sub>y</sub>)
+              </div>
+              <p>
+                The corresponding compression slopes are:
+              </p>
+              <div class="equation">
+                &lambda;<sub>y,-</sub><sup>(m)</sup> = <span class="frac"><span class="num">&kappa;<sub>y,-</sub><sup>(m)</sup> - &gamma;<sub>y,-</sub><sup>(m)</sup></span><span class="den">&kappa;<sub>y,-</sub><sup>(m)</sup></span></span>,&nbsp;&nbsp;
+                &lambda;<sub>y,+</sub><sup>(m)</sup> = <span class="frac"><span class="num">&gamma;<sub>y,+</sub><sup>(m)</sup> - &kappa;<sub>y,+</sub><sup>(m)</sup></span><span class="den">L<sub>y</sub> - 1 - &kappa;<sub>y,+</sub><sup>(m)</sup></span></span>
+              </div>
+              <p>
+                With every term now defined, the vertical coordinate mapping is:
+              </p>
+              <div class="equation piecewise-equation">
+                <span class="piecewise-lhs">&rho;<sub>y</sub><sup>(m)</sup>(p<sub>y</sub>) =</span>
+                <span class="piecewise-brace" aria-hidden="true">{</span>
+                <span class="piecewise-cases">
+                  <span class="piecewise-expression">&gamma;<sub>y,-</sub><sup>(m)</sup> + &lambda;<sub>y,-</sub><sup>(m)</sup>p<sub>y</sub>,</span>
+                  <span class="piecewise-condition">if p<sub>y</sub> &lt; &kappa;<sub>y,-</sub><sup>(m)</sup></span>
+                  <span class="piecewise-expression">p<sub>y</sub>,</span>
+                  <span class="piecewise-condition">if &kappa;<sub>y,-</sub><sup>(m)</sup> &le; p<sub>y</sub> &le; &kappa;<sub>y,+</sub><sup>(m)</sup></span>
+                  <span class="piecewise-expression">&kappa;<sub>y,+</sub><sup>(m)</sup> + &lambda;<sub>y,+</sub><sup>(m)</sup>(p<sub>y</sub> - &kappa;<sub>y,+</sub><sup>(m)</sup>),</span>
+                  <span class="piecewise-condition">if p<sub>y</sub> &gt; &kappa;<sub>y,+</sub><sup>(m)</sup></span>
+                </span>
+              </div>
+              <p>
+                The same mapping is applied along the horizontal axis. Query features and their original temporal-spatial coordinates remain unchanged; only the coordinates assigned to keys are rectified relative to the current query tile:
+              </p>
+              <div class="equation">Q&#771;<sub>m</sub> = RoPE(t, y, x) Q<sub>m</sub></div>
+              <div class="equation">K&#771;<sub>all</sub><sup>(m)</sup> = RoPE(t, &rho;<sub>y</sub><sup>(m)</sup>(y), &rho;<sub>x</sub><sup>(m)</sup>(x)) K<sub>all</sub></div>
+              <p>
+                This tile-conditioned encoding preserves local spatial relationships while bounding long-range relative offsets, allowing stable global interactions and coherent detail at resolutions up to 4K.
+              </p>
+            </div>
+            <button class="method-read-button" type="button" aria-expanded="false">Read more</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
+<!-- End Pipeline section -->
 
-<div class="content">
-  <h2><b>Text-to-Video Comparison (1920 × 3328)</b></h2>
-  <p>Image qualitative comparisons with other baselines. At the resolution several times higher than those used during training, LTX and Wan-DI tend to fail completely. While UAV, a video super-resolution approach, can still produce visually reasonable results, it is unable to recover fine details that are ambiguous or missing in the low-resolution inputs. In contrast, CineScale consistently generates high-quality videos with rich and faithful visual details.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_t2v_tuned_3k.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
+<section class="section figure-showcase">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Results and Ablations</h2>
+    <div class="paper-figure-stack">
+
+      <figure class="paper-figure-card">
+        <a class="paper-figure-frame" href="static/figures/RoPE_Ablation_web.png?v=e6e561b8" target="_blank" aria-label="Open the RoPE ablation figure at full resolution">
+          <img
+            src="static/figures/RoPE_Ablation_web.png?v=e6e561b8"
+            alt="Visual ablation comparing RoPE, NTK-RoPE, and Adaptively Rectified RoPE"
+            loading="lazy"
+          />
+        </a>
+        <figcaption>RoPE ablation: standard RoPE, NTK-RoPE, and Adaptively Rectified RoPE.</figcaption>
+      </figure>
+
+      
+      <figure class="paper-figure-card">
+        <a class="paper-figure-frame" href="static/figures/4K_Comparison_web.png?v=efe98bc0" target="_blank" aria-label="Open the 4K comparison figure at full resolution">
+          <img
+            src="static/figures/4K_Comparison_web.png?v=efe98bc0"
+            alt="4K video generation comparison across Kling 3.0, LTX 2.0, Wan 2.2, and CineScale"
+            loading="lazy"
+          />
+        </a>
+        <figcaption>4K comparison across recent video generation systems.</figcaption>
+      </figure>
+
+    </div>
   </div>
-</div>
+</section>
 
 
-<div class="content">
-  <h2><b>Image-to-Video Ablation (960 × 1664)</b></h2>
-  <p>Although all variants can generate rough results. Our full method performs the best.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_i2v_untuned.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
+
+
+<!-- Video grid section -->
+<section class="section hero is-dark">
+  <div class="container is-max-desktop video-grid-section">
+    <h2 class="title is-3 has-text-centered">4K Video Gallery</h2>
+    <div class="continuous-carousel" data-continuous-carousel aria-label="Continuously scrolling video gallery">
+      <div class="continuous-carousel-viewport">
+        <div class="continuous-carousel-track">
+          <article class="continuous-video-card">
+            <video src="static/videos/A_cinematic_anime_scene_of_a_s.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_cinematic_anime_scene_of_two.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_cinematic_anime_train-statio.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_cinematic_evening_stroll_thr.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_cinematic_slow-motion_close.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_cinematic_slow-motion_close_02.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_little_girl_lost_in_the_cit%20copy.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_slow_cinematic_tracking_shot.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_smooth_cinematic_glide_throu.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/A_sweeping_cinematic_shot_acro.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/Close-up_portrait_at_dusk_sof.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/Close-up_shot_Camera_pushes_i.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/On_a_muddy_rugby_field_wa.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/This_is_a_skateboarding_sc.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/clean_single_shot_long_lens.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/daylight_soft_lighting_side.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/edge_lighting_low-contrast_m.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/edge_lighting_soft_lighting.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/golden_hour_sunlight_soft_lig.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/medium_lens_soft_lighting_lo.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+          <article class="continuous-video-card">
+            <video src="static/videos/soft_lighting_warm_colors_me.mp4" muted loop playsinline preload="metadata"></video>
+          </article>
+        </div>
+      </div>
+    </div>
+    <p class="carousel-hint">Hover to zoom</p>
   </div>
-</div>
+</section>
+<!-- End video grid section -->
 
-
-<div class="content">
-  <h2><b>Image-to-Video Generation (2176 × 3840)</b></h2>
-  <p>With minimal LoRA fine-tuning, CineScale can achieve 4k image-to-video generation.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_i2v_tuned.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
-  </div>
-</div>
-
-
-<div class="content">
-  <h2><b>ReCamMaster Video-to-Video Ablation (960 × 1664)</b></h2>
-  <p>Without NTK-RoPE, repeated patterns are prone to occur due to errors in positional encoding. Although all variants can generate rough results. Our full method performs the best.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_v2v_untuned.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
-  </div>
-</div>
-
-
-<div class="content">
-  <h2><b>Local Semantic Editing (2176 × 3840)</b></h2>
-  <p>CineScale supports efficient editing by allowing users to preview results at low resolution while modifying high-resolution local semantics via prompts.</p>
-  <div style="text-align: center;">
-  <video width="1000" autoplay muted loop playsinline>
-    <!-- Your video file here -->
-    <source src="./CineScale_files/vids/vid_t2v_edit.mp4"
-    type="video/mp4">
-  sorry, your browser does not support HTML5 Videos.
-  </video>
-  </div>
-</div>
-
-
-
-<div class="content">
-<h2>BibTex</h2>
-<p>
-    If you find this paper useful in your research, please consider citing:
-</p>
-<div class="row">
-<pre>
-@article{qiu2025cinescale,
-  title={CineScale: Free Lunch in High-Resolution Cinematic Visual Generation}, 
+<section class="section" id="citation">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 has-text-centered"><span aria-hidden="true">📖</span> Citation</h2>
+        <p class="citation-note">
+          If you find CineScale useful in your research or projects, consider citing our paper:
+        </p>
+        <div class="citation-bibtex-shell">
+          <button
+            class="button is-small is-dark citation-copy-button"
+            id="copy-citation"
+            type="button"
+            data-copy-target="citation-bibtex-text"
+            aria-label="Copy BibTeX"
+            title="Copy BibTeX"
+          >
+            <span class="icon is-small" aria-hidden="true">
+              <i class="far fa-copy"></i>
+            </span>
+          </button>
+          <pre class="citation-bibtex"><code id="citation-bibtex-text">@article{qiu2025cinescale,
+  title={CineScale: Free Lunch in High-Resolution Cinematic Visual Generation},
   author={Haonan Qiu and Ning Yu and Ziqi Huang and Paul Debevec and Ziwei Liu},
   journal={arXiv preprint arXiv:2508.15774},
   year={2025}
 }
-</pre>
-</div>
-</div>
+</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 
-<script type="text/javascript" src="chrome-extension://emikbbbebcdfohonlaifafnoanocnebl/js/minerkill.js"></script></body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
-  div.grammarly-desktop-integration {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select:none;
-    user-select:none;
-  }
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
 
-  div.grammarly-desktop-integration:before {
-    content: attr(data-content);
-  }
-</style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration>
-</html>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Statcounter tracking code -->
+  
+<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+    <!-- End of Statcounter Code -->
+
+  </body>
+  </html>
