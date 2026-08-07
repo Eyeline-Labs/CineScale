@@ -157,6 +157,77 @@ body {
   color: #d7d7d7;
 }
 
+.affiliation-logos {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1.25rem auto 0;
+}
+
+.affiliation-logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70px;
+  overflow: hidden;
+}
+
+.affiliation-logo img {
+  display: block;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
+}
+
+.affiliation-logo-ntu img {
+  width: 220px;
+  height: auto;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+.affiliation-logo-eyeline img {
+  width: 205px;
+  height: auto;
+  max-width: none;
+  filter: invert(1) brightness(0.9) drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
+}
+
+.affiliation-logo-eyeline::before {
+  position: absolute;
+  left: -1rem;
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.2), transparent);
+  content: "";
+}
+
+@media (max-width: 480px) {
+  .affiliation-logos {
+    gap: 1.25rem;
+  }
+
+  .affiliation-logo {
+    height: 50px;
+  }
+
+  .affiliation-logo-ntu img {
+    width: 175px;
+  }
+
+  .affiliation-logo-eyeline img {
+    width: 160px;
+  }
+
+  .affiliation-logo-eyeline::before {
+    left: -0.625rem;
+  }
+}
+
 .math-block {
   background: transparent;
   color: #fff;
