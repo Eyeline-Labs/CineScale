@@ -1490,6 +1490,12 @@ body::before {
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .nav-source:hover {
   border-color: rgba(255, 157, 50, 0.5);
   background: rgba(255, 138, 31, 0.11);
@@ -2095,6 +2101,51 @@ body::before {
   letter-spacing: 0.04em;
 }
 
+.method-paper-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: min(100%, 820px);
+  margin: 2rem auto 0;
+  padding: 1.1rem 1.15rem 1.1rem 1.4rem;
+  border: 1px solid rgba(255, 159, 67, 0.28);
+  border-radius: 16px;
+  background:
+    radial-gradient(300px circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(255, 151, 58, 0.13), transparent 70%),
+    rgba(14, 14, 15, 0.82);
+  text-align: left;
+}
+
+.method-paper-cta p {
+  margin: 0 !important;
+  color: #b8b6b0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.method-paper-cta a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffad59, #ff7b19);
+  box-shadow: 0 10px 28px rgba(255, 122, 25, 0.18);
+  color: #0b0907 !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none !important;
+  transition: box-shadow 180ms ease, transform 180ms var(--ease-out);
+}
+
+.method-paper-cta a:hover {
+  box-shadow: 0 14px 34px rgba(255, 122, 25, 0.3);
+  color: #0b0907 !important;
+  transform: translateY(-2px);
+}
+
 .method-pillars {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2488,7 +2539,19 @@ body::before {
   }
 
   .nav-source {
+    display: inline-flex;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-actions {
     display: none;
+    grid-column: 1 / -1;
+    padding: 0.2rem 0.25rem 0.35rem;
+  }
+
+  .nav-actions.is-open {
+    display: flex;
   }
 
   .overview-layout,
@@ -2645,6 +2708,17 @@ body::before {
 
   .method-pillars {
     grid-template-columns: 1fr;
+  }
+
+  .method-paper-cta {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.15rem;
+    text-align: center;
+  }
+
+  .method-paper-cta a {
+    justify-content: center;
   }
 
   .method-pillars article {

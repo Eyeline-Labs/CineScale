@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const siteNav = document.querySelector('.site-nav');
     const navToggle = document.querySelector('.nav-toggle');
     const navLinksContainer = document.querySelector('.site-nav-links');
+    const navActions = document.querySelector('.nav-actions');
     const navLinks = Array.from(document.querySelectorAll('.site-nav-links a[href^="#"]'));
     const pageSections = Array.from(document.querySelectorAll('[data-section]'));
     let pageFrame = null;
@@ -34,6 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
         navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
         navLinksContainer.classList.toggle('is-open', open);
+        if (navActions) {
+          navActions.classList.toggle('is-open', open);
+        }
       };
 
       navToggle.addEventListener('click', () => {
@@ -820,26 +824,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
-    document.querySelectorAll('[data-method-collapsible]').forEach((container) => {
-      const content = container.querySelector('.method-content');
-      const toggleButton = container.querySelector('.method-read-button');
-      if (!content || !toggleButton) {
-        return;
-      }
-
-      const setExpanded = (expanded) => {
-        content.hidden = !expanded;
-        toggleButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        toggleButton.textContent = expanded ? 'Read less' : 'Read more';
-      };
-
-      setExpanded(false);
-      toggleButton.addEventListener('click', () => {
-        const expanded = toggleButton.getAttribute('aria-expanded') === 'true';
-        setExpanded(!expanded);
-      });
-    });
-
     const costVisualizer = document.getElementById('cost-visualizer');
     if (costVisualizer) {
       const segmentLengthInput = document.getElementById('cost-segment-length');
@@ -1142,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', function() {
       '.tldr-summary',
       '.pipeline-figure',
       '.content > p',
-      '.method-collapsible',
+      '.method-paper-cta',
       '.figure-showcase .paper-figure-card',
       '.continuous-carousel',
       '.carousel-hint',

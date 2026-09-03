@@ -41,9 +41,14 @@
       <a href="#gallery">Gallery</a>
       <a href="#citation">Citation</a>
     </div>
-    <a class="nav-source" href="https://github.com/Eyeline-Labs/CineScale" target="_blank" rel="noopener noreferrer">
-      GitHub <span aria-hidden="true">↗</span>
-    </a>
+    <div class="nav-actions">
+      <a class="nav-source" href="https://arxiv.org/abs/2508.15774" target="_blank" rel="noopener noreferrer">
+        arXiv <span aria-hidden="true">↗</span>
+      </a>
+      <a class="nav-source" href="https://github.com/Eyeline-Labs/CineScale" target="_blank" rel="noopener noreferrer">
+        GitHub <span aria-hidden="true">↗</span>
+      </a>
+    </div>
   </nav>
 
   <main>
@@ -175,9 +180,7 @@
     </div>
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-      
         <div class="content has-text-justified">
-
           <figure class="pipeline-figure paper-figure-card">
             <a class="paper-figure-frame" href="static/figures/fig_framework_panel.png" target="_blank" aria-label="Open the framework figure at full resolution">
               <img
@@ -192,82 +195,11 @@
             CineScale enables pretrained video diffusion models to generate far beyond their native training resolution without retraining. It partitions query tokens into spatial tiles while retaining access to all global keys and values, then uses Adaptively Rectified RoPE to preserve precise local geometry and keep long-range positional offsets within the range supported by the pretrained model.
           </p>
 
-          <div class="method-collapsible" data-method-collapsible>
-            <button class="method-read-button" type="button" aria-expanded="false">Read more</button>
-            <div class="method-content" hidden>
-              <h3 class="title is-4 has-text-centered has-text-white">Tiled Self-Attention</h3>
-              <p>
-                We partition the query tokens into <em>M</em> non-overlapping tiles {T<sub>m</sub>}<sup>M</sup><sub>m=1</sub>, with each tile covering the same spatial region across every video frame. If I<sub>m</sub> contains the token indices assigned to tile m, its queries are:
-              </p>
-              <div class="equation">Q<sub>m</sub> = Q[I<sub>m</sub>, :]</div>
-              <p>
-                Each query tile attends to the complete set of keys and values from the video. Tiling therefore reduces the query-side working set without restricting global context:
-              </p>
-              <div class="equation">O<sub>m</sub> = Softmax(<span class="frac"><span class="num">Q&#771;<sub>m</sub>(K&#771;<sub>all</sub><sup>(m)</sup>)<sup>T</sup></span><span class="den">&radic;d<sub>h</sub></span></span>) V<sub>all</sub></div>
-              <p>
-                Here, Q&#771;<sub>m</sub> and K&#771;<sub>all</sub><sup>(m)</sup> are the positionally encoded queries and global keys, V<sub>all</sub> contains every value token, and d<sub>h</sub> is the attention-head dimension. With standard RoPE, processing the query tiles independently and concatenating their outputs is mathematically equivalent to conventional global self-attention. The tile outputs are scattered back to their original locations as O[I<sub>m</sub>, :] = O<sub>m</sub>. CineScale changes only how the global keys are positionally encoded for each tile.
-              </p>
-
-              <h3 class="title is-4 has-text-centered has-text-white">Adaptively Rectified RoPE</h3>
-              <p>
-                At high resolutions, standard RoPE encounters relative spatial offsets far outside its training distribution. For every query tile, Adaptively Rectified RoPE leaves nearby key coordinates unchanged and linearly compresses more distant coordinates toward the tile.
-              </p>
-              <p>
-                Consider a vertical key coordinate p<sub>y</sub> in [0, L<sub>y</sub> - 1]. Let [&ell;<sub>y</sub><sup>(m)</sup>, u<sub>y</sub><sup>(m)</sup>] be the vertical extent of tile m, D<sub>y</sub><sup>(m)</sup> = u<sub>y</sub><sup>(m)</sup> - &ell;<sub>y</sub><sup>(m)</sup> its height, and R<sub>y</sub> the largest relative offset supported by the pretrained model. The remaining external positional budget is:
-              </p>
-              <div class="equation">B<sub>y</sub><sup>(m)</sup> = R<sub>y</sub> - D<sub>y</sub><sup>(m)</sup></div>
-              <p>
-                Given a local preservation threshold &tau;<sub>y</sub>, the unchanged margins on either side of the tile are:
-              </p>
-              <div class="equation">
-                &delta;<sub>y,-</sub><sup>(m)</sup> = min(&tau;<sub>y</sub>, &ell;<sub>y</sub><sup>(m)</sup>, B<sub>y</sub><sup>(m)</sup>),<br>
-                &delta;<sub>y,+</sub><sup>(m)</sup> = min(&tau;<sub>y</sub>, L<sub>y</sub> - 1 - u<sub>y</sub><sup>(m)</sup>, B<sub>y</sub><sup>(m)</sup>)
-              </div>
-              <p>
-                These margins define the interval [&kappa;<sub>y,-</sub><sup>(m)</sup>, &kappa;<sub>y,+</sub><sup>(m)</sup>] whose coordinates remain unchanged:
-              </p>
-              <div class="equation">
-                &kappa;<sub>y,-</sub><sup>(m)</sup> = &ell;<sub>y</sub><sup>(m)</sup> - &delta;<sub>y,-</sub><sup>(m)</sup>,<br>
-                &kappa;<sub>y,+</sub><sup>(m)</sup> = u<sub>y</sub><sup>(m)</sup> + &delta;<sub>y,+</sub><sup>(m)</sup>
-              </div>
-              <p>
-                Coordinates outside that interval are compressed toward the target endpoints &gamma;<sub>y,-</sub><sup>(m)</sup> and &gamma;<sub>y,+</sub><sup>(m)</sup>:
-              </p>
-              <div class="equation">
-                &gamma;<sub>y,-</sub><sup>(m)</sup> = max(0, u<sub>y</sub><sup>(m)</sup> - R<sub>y</sub>),<br>
-                &gamma;<sub>y,+</sub><sup>(m)</sup> = min(L<sub>y</sub> - 1, &ell;<sub>y</sub><sup>(m)</sup> + R<sub>y</sub>)
-              </div>
-              <p>
-                The corresponding compression slopes are:
-              </p>
-              <div class="equation">
-                &lambda;<sub>y,-</sub><sup>(m)</sup> = <span class="frac"><span class="num">&kappa;<sub>y,-</sub><sup>(m)</sup> - &gamma;<sub>y,-</sub><sup>(m)</sup></span><span class="den">&kappa;<sub>y,-</sub><sup>(m)</sup></span></span>,&nbsp;&nbsp;
-                &lambda;<sub>y,+</sub><sup>(m)</sup> = <span class="frac"><span class="num">&gamma;<sub>y,+</sub><sup>(m)</sup> - &kappa;<sub>y,+</sub><sup>(m)</sup></span><span class="den">L<sub>y</sub> - 1 - &kappa;<sub>y,+</sub><sup>(m)</sup></span></span>
-              </div>
-              <p>
-                With every term now defined, the vertical coordinate mapping is:
-              </p>
-              <div class="equation piecewise-equation">
-                <span class="piecewise-lhs">&rho;<sub>y</sub><sup>(m)</sup>(p<sub>y</sub>) =</span>
-                <span class="piecewise-brace" aria-hidden="true">{</span>
-                <span class="piecewise-cases">
-                  <span class="piecewise-expression">&gamma;<sub>y,-</sub><sup>(m)</sup> + &lambda;<sub>y,-</sub><sup>(m)</sup>p<sub>y</sub>,</span>
-                  <span class="piecewise-condition">if p<sub>y</sub> &lt; &kappa;<sub>y,-</sub><sup>(m)</sup></span>
-                  <span class="piecewise-expression">p<sub>y</sub>,</span>
-                  <span class="piecewise-condition">if &kappa;<sub>y,-</sub><sup>(m)</sup> &le; p<sub>y</sub> &le; &kappa;<sub>y,+</sub><sup>(m)</sup></span>
-                  <span class="piecewise-expression">&kappa;<sub>y,+</sub><sup>(m)</sup> + &lambda;<sub>y,+</sub><sup>(m)</sup>(p<sub>y</sub> - &kappa;<sub>y,+</sub><sup>(m)</sup>),</span>
-                  <span class="piecewise-condition">if p<sub>y</sub> &gt; &kappa;<sub>y,+</sub><sup>(m)</sup></span>
-                </span>
-              </div>
-              <p>
-                The same mapping is applied along the horizontal axis. Query features and their original temporal-spatial coordinates remain unchanged; only the coordinates assigned to keys are rectified relative to the current query tile:
-              </p>
-              <div class="equation">Q&#771;<sub>m</sub> = RoPE(t, y, x) Q<sub>m</sub></div>
-              <div class="equation">K&#771;<sub>all</sub><sup>(m)</sup> = RoPE(t, &rho;<sub>y</sub><sup>(m)</sup>(y), &rho;<sub>x</sub><sup>(m)</sup>(x)) K<sub>all</sub></div>
-              <p>
-                This tile-conditioned encoding preserves local spatial relationships while bounding long-range relative offsets, allowing stable global interactions and coherent detail at resolutions up to 4K.
-              </p>
-            </div>
+          <div class="method-paper-cta" data-glow-card>
+            <p>For complete method details and technical derivations, please refer to the paper.</p>
+            <a href="https://arxiv.org/abs/2508.15774" target="_blank" rel="noopener noreferrer">
+              Read the paper <span aria-hidden="true">↗</span>
+            </a>
           </div>
         </div>
       </div>
