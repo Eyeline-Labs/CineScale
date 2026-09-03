@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/index.css?v=20260903-4">
+  <link rel="stylesheet" href="static/css/index.css?v=20260903-5">
 
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <script defer src="static/js/bulma-carousel.min.js"></script>
@@ -222,7 +222,7 @@
         <div class="ablation-matrix-scroll" data-glow-card tabindex="0" aria-label="RoPE variant video ablation; scroll horizontally to view every cascading step">
           <div class="ablation-matrix" role="table" aria-label="RoPE variant ablation videos">
             <div class="ablation-matrix-row" role="row">
-              <div class="ablation-matrix-corner" role="columnheader">RoPE variant</div>
+              <div class="ablation-matrix-corner" aria-hidden="true"></div>
               <div class="ablation-column-heading" role="columnheader">No cascading</div>
               <div class="ablation-column-heading" role="columnheader">5 cascading steps</div>
               <div class="ablation-column-heading" role="columnheader">15 cascading steps</div>
@@ -251,24 +251,24 @@
               <div class="ablation-video-cell is-available" role="cell">
                 <video
                   class="ablation-video"
-                  data-src="static/videos/rope-ablation/AR_Sigma5.mp4"
+                  data-src="static/videos/rope-ablation/AR_Sigma5_web.mp4"
                   aria-label="AR-RoPE with 5 cascading steps"
-                  muted loop playsinline controls preload="none"
+                  muted loop playsinline preload="none"
                 ></video>
               </div>
               <div class="ablation-video-cell is-available" role="cell">
                 <video
                   class="ablation-video"
-                  data-src="static/videos/rope-ablation/AR_Sigma15.mp4"
+                  data-src="static/videos/rope-ablation/AR_Sigma15_web.mp4"
                   aria-label="AR-RoPE with 15 cascading steps"
-                  muted loop playsinline controls preload="none"
+                  muted loop playsinline preload="none"
                 ></video>
               </div>
               <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
             </div>
           </div>
         </div>
-        <figcaption>RoPE variant ablation across increasing numbers of cascading steps. Hover over an available video to inspect fine details.</figcaption>
+        <figcaption>Ablation across increasing numbers of cascading steps. Hover over an available video to inspect fine details.</figcaption>
       </figure>
 
       

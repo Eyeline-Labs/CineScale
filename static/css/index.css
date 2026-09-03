@@ -2335,7 +2335,8 @@ body::before {
 
 .ablation-matrix-corner {
   z-index: 3;
-  color: #777672;
+  border-color: transparent;
+  background: transparent;
 }
 
 .ablation-row-heading.is-ours {
