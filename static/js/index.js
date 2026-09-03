@@ -1,8 +1,101 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 
 
-$(document).ready(function() {
-    // Check for click events on the navbar burger icon
+document.addEventListener('DOMContentLoaded', function() {
+    const siteNav = document.querySelector('.site-nav');
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinksContainer = document.querySelector('.site-nav-links');
+    const navLinks = Array.from(document.querySelectorAll('.site-nav-links a[href^="#"]'));
+    const pageSections = Array.from(document.querySelectorAll('[data-section]'));
+    let pageFrame = null;
+
+    const updatePageChrome = () => {
+      const scrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+      const progress = Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100));
+      document.documentElement.style.setProperty('--scroll-progress', `${progress}%`);
+      if (siteNav) {
+        siteNav.classList.toggle('is-scrolled', window.scrollY > 24);
+      }
+      pageFrame = null;
+    };
+
+    const requestPageChromeUpdate = () => {
+      if (pageFrame === null) {
+        pageFrame = window.requestAnimationFrame(updatePageChrome);
+      }
+    };
+
+    window.addEventListener('scroll', requestPageChromeUpdate, { passive: true });
+    window.addEventListener('resize', requestPageChromeUpdate, { passive: true });
+    updatePageChrome();
+
+    if (navToggle && navLinksContainer) {
+      const setNavigationOpen = (open) => {
+        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+        navLinksContainer.classList.toggle('is-open', open);
+      };
+
+      navToggle.addEventListener('click', () => {
+        setNavigationOpen(navToggle.getAttribute('aria-expanded') !== 'true');
+      });
+
+      navLinks.forEach((link) => {
+        link.addEventListener('click', () => setNavigationOpen(false));
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          setNavigationOpen(false);
+        }
+      });
+    }
+
+    if ('IntersectionObserver' in window && pageSections.length > 0) {
+      const sectionObserver = new IntersectionObserver((entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visibleEntry) {
+          return;
+        }
+        const activeId = visibleEntry.target.id;
+        navLinks.forEach((link) => {
+          link.classList.toggle('is-active', link.getAttribute('href') === `#${activeId}`);
+        });
+      }, {
+        rootMargin: '-25% 0px -60% 0px',
+        threshold: [0, 0.15, 0.4],
+      });
+      pageSections.forEach((section) => sectionObserver.observe(section));
+    }
+
+    document.querySelectorAll('[data-glow-card]').forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const bounds = card.getBoundingClientRect();
+        const x = ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 100;
+        const y = ((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 100;
+        card.style.setProperty('--glow-x', `${x}%`);
+        card.style.setProperty('--glow-y', `${y}%`);
+      });
+    });
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      let pointerFrame = null;
+      let pointerX = 72;
+      let pointerY = 10;
+      document.addEventListener('pointermove', (event) => {
+        pointerX = (event.clientX / Math.max(window.innerWidth, 1)) * 100;
+        pointerY = (event.clientY / Math.max(window.innerHeight, 1)) * 100;
+        if (pointerFrame === null) {
+          pointerFrame = window.requestAnimationFrame(() => {
+            document.documentElement.style.setProperty('--pointer-x', `${pointerX}%`);
+            document.documentElement.style.setProperty('--pointer-y', `${pointerY}%`);
+            pointerFrame = null;
+          });
+        }
+      }, { passive: true });
+    }
 
     var options = {
 			slidesToScroll: 1,
@@ -14,9 +107,13 @@ $(document).ready(function() {
     }
 
 		// Initialize all div with carousel class
-    var carousels = bulmaCarousel.attach('.carousel', options);
+    if (window.bulmaCarousel) {
+      bulmaCarousel.attach('.carousel', options);
+    }
 	
-    bulmaSlider.attach();
+    if (window.bulmaSlider) {
+      bulmaSlider.attach();
+    }
 
     const defaultModelOptions = [
       { key: 'wan2-2', label: 'Wan2.2' },
@@ -1038,6 +1135,7 @@ $(document).ready(function() {
       '.publication-title',
       '.publication-authors',
       '.publication-links',
+      '.hero-research-note',
       '.cinescale-youtube',
       '.youtube-caption',
       '.section .title',
@@ -1177,4 +1275,4 @@ $(document).ready(function() {
         closePrompt();
       }
     });
-})
+});

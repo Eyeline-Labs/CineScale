@@ -1,14 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070707">
+  <meta name="description" content="CineScale is a tuning-free framework for high-resolution video generation with pretrained video diffusion models.">
   <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicon-32.png?v=2">
   <link rel="shortcut icon" type="image/png" href="static/images/favicon-32.png?v=2">
   <link rel="apple-touch-icon" sizes="180x180" href="static/images/apple-touch-icon.png?v=2">
 
   <title>CineScale</title>
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-  rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="static/css/bulma.min.css">
   <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
@@ -18,24 +22,44 @@
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="static/css/index.css">
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
   <script defer src="static/js/fontawesome.all.min.js"></script>
-  <script src="static/js/bulma-carousel.min.js"></script>
-  <script src="static/js/bulma-slider.min.js"></script>
-  <script src="static/js/index.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
 </head>
 <body>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
 
+  <nav class="site-nav" aria-label="Primary navigation">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-links" aria-label="Open navigation">
+      <span></span><span></span>
+    </button>
+    <div class="site-nav-links" id="site-nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#citation">Citation</a>
+    </div>
+    <a class="nav-source" href="https://github.com/Eyeline-Labs/CineScale" target="_blank" rel="noopener noreferrer">
+      GitHub <span aria-hidden="true">↗</span>
+    </a>
+  </nav>
 
-  <section class="hero">
+  <main>
+  <section class="hero project-hero" id="top">
+    <div class="hero-ambient" aria-hidden="true">
+      <span class="ambient-orb ambient-orb-one"></span>
+      <span class="ambient-orb ambient-orb-two"></span>
+      <span class="ambient-grid"></span>
+    </div>
     <div class="hero-body">
-      <div class="container is-max-desktop">
+      <div class="container is-max-widescreen hero-container">
         <div class="columns is-centered">
           <div class="column has-text-centered">
             <h1 class="title is-1 publication-title">
               <img src="static/images/Logo.png" alt="Logo" class="title-logo">
-              <span class="publication-title-text">Cine<span class="title-accent">Scale</span>: Open-Sourcing Tuning-Free High-Resolution Video Generation</span>
+              <span class="publication-title-text">Cine<span class="title-accent">Scale</span>: Tuning-Free High-Resolution Video Generation</span>
             </h1>
 
             <div class="is-size-5 publication-authors">
@@ -64,7 +88,7 @@
               <span><sup class="author-sup">&#9993;</sup>Corresponding authors</span>
             </div>
 
-            <div class="affiliation-logos" aria-label="Affiliation logos">
+            <div class="affiliation-logos" aria-label="Research affiliations">
               <div class="affiliation-logo affiliation-logo-ntu">
                 <img src="static/images/ntu_logo.png" alt="Nanyang Technological University">
               </div>
@@ -73,13 +97,12 @@
               </div>
             </div>
 
-                  <div class="column has-text-centered">
-                    <div class="publication-links">
+            <div class="publication-links">
 
                   <!-- Github link -->
                   <span class="link-block">
                     <a href="https://github.com/Eyeline-Labs/CineScale" target="_blank"
-                    class="external-link button is-normal is-rounded is-dark">
+                    class="external-link button is-normal is-rounded is-dark" rel="noopener noreferrer">
                     <span class="icon">
                       <i class="fab fa-github"></i>
                     </span>
@@ -90,7 +113,7 @@
                 <!-- arXiv link -->
                 <span class="link-block">
                   <a href="https://arxiv.org/abs/2508.15774" target="_blank"
-                  class="external-link button is-normal is-rounded is-dark">
+                  class="external-link button is-normal is-rounded is-dark" rel="noopener noreferrer">
                     <span class="icon">
                       <i class="ai ai-arxiv"></i>
                     </span>
@@ -100,47 +123,56 @@
 
             </div>
 
-            <div class="publication-video cinescale-youtube">
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/WMK8aZtKAec"
-                title="CineScale supplementary video"
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-              </iframe>
+            <aside class="hero-research-note" data-glow-card>
+              <p>CineScale is the <strong>first tuning-free inference framework</strong> to enable pretrained video diffusion models, including Wan2.2, HunyuanVideo, and CogVideoX, to generate <strong>high-fidelity 4K videos</strong> <strong>without any fine-tuning.</strong></p>
+            </aside>
+
+            <div class="hero-media-shell" data-glow-card>
+              <div class="publication-video cinescale-youtube">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/WMK8aZtKAec"
+                  title="CineScale supplementary video"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen>
+                </iframe>
+              </div>
             </div>
             <p class="youtube-caption">Watch in 4K</p>
 
             
-          </div>
         </div>
       </div>
     </div>
-  </div>
+    </div>
 </section>
 
 <!-- Paper abstract -->
-<section class="section hero is-dark">
+<section class="section intro-section" id="overview" data-section>
   <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3 has-text-centered has-text-white">CineScale is now integrated into <a href="https://github.com/Wan-Video/Wan2.2">Wan</a> 🎉</h2>
-        <br><br>
-        <div class="content">
-           <h2 class="title is-3 has-text-centered has-text-white">TL;DR</h2>
+    <div class="section-heading">
+      <h2 class="title is-3 has-text-centered has-text-white">CineScale is now integrated into <a href="https://github.com/Wan-Video/Wan2.2">Wan</a> 🎉</h2>
+    </div>
+
+    <div class="overview-layout">
+      <div class="content glass-panel tldr-panel" data-glow-card>
+          <h2 class="title is-3 has-text-centered has-text-white">TL;DR</h2>
           <p class="tldr-summary">
             Most video generators are trained at limited spatial resolutions due to the scarcity of high-resolution 4K video data and the prohibitive computational cost of large-scale training on such data. Most video diffusion models are trained on 720p videos and are therefore effectively limited to generating videos at similar resolutions during inference. To address this gap, we propose CineScale. CineScale, to the best of our knowledge, is the first tuning-free inference framework enabling pretrained video diffusion models to generate high-fidelity videos at resolutions far beyond those encountered during training, without any fine-tuning.
           </p>
-        </div>
       </div>
+
     </div>
   </div>
 </section>
 <!-- End paper abstract -->
 
 <!-- Pipeline section -->
-
-  <div class="container is-max-desktop">
+<section class="section method-section" id="method" data-section>
+  <div class="container is-max-widescreen">
+    <div class="section-heading">
+      <h2 class="title is-3 has-text-centered has-text-white">Method</h2>
+    </div>
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
       
@@ -155,12 +187,13 @@
             </a>
             <figcaption>Framework overview: tiled self-attention with Adaptively Rectified RoPE.</figcaption>
           </figure>
-          <h2 class="title is-3 has-text-centered has-text-white">Method</h2>
-          <p>
+
+          <p class="method-intro">
             CineScale enables pretrained video diffusion models to generate far beyond their native training resolution without retraining. It partitions query tokens into spatial tiles while retaining access to all global keys and values, then uses Adaptively Rectified RoPE to preserve precise local geometry and keep long-range positional offsets within the range supported by the pretrained model.
           </p>
 
           <div class="method-collapsible" data-method-collapsible>
+            <button class="method-read-button" type="button" aria-expanded="false">Read more</button>
             <div class="method-content" hidden>
               <h3 class="title is-4 has-text-centered has-text-white">Tiled Self-Attention</h3>
               <p>
@@ -235,18 +268,22 @@
                 This tile-conditioned encoding preserves local spatial relationships while bounding long-range relative offsets, allowing stable global interactions and coherent detail at resolutions up to 4K.
               </p>
             </div>
-            <button class="method-read-button" type="button" aria-expanded="false">Read more</button>
           </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
 <!-- End Pipeline section -->
 
-<section class="section figure-showcase">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">Results and Ablations</h2>
+<section class="section figure-showcase" id="results" data-section>
+  <div class="container is-max-widescreen">
+    <div class="section-heading section-heading-split">
+      <div>
+        <h2 class="title is-3 has-text-centered">Results and Ablations</h2>
+      </div>
+    </div>
     <div class="paper-figure-stack">
 
       <figure class="paper-figure-card">
@@ -280,9 +317,11 @@
 
 
 <!-- Video grid section -->
-<section class="section hero is-dark">
-  <div class="container is-max-desktop video-grid-section">
-    <h2 class="title is-3 has-text-centered">4K Video Gallery</h2>
+<section class="section gallery-section" id="gallery" data-section>
+  <div class="container is-max-widescreen video-grid-section">
+    <div class="section-heading gallery-heading">
+      <h2 class="title is-3 has-text-centered">4K Video Gallery</h2>
+    </div>
     <div class="continuous-carousel" data-continuous-carousel aria-label="Continuously scrolling video gallery">
       <div class="continuous-carousel-viewport">
         <div class="continuous-carousel-track">
@@ -351,53 +390,45 @@
 </section>
 <!-- End video grid section -->
 
-<section class="section" id="citation">
+<section class="section citation-section" id="citation" data-section>
   <div class="container is-max-desktop">
     <div class="columns is-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3 has-text-centered"><span aria-hidden="true">📖</span> Citation</h2>
-        <p class="citation-note">
-          If you find CineScale useful in your research or projects, consider citing our paper:
-        </p>
-        <div class="citation-bibtex-shell">
-          <button
-            class="button is-small is-dark citation-copy-button"
-            id="copy-citation"
-            type="button"
-            data-copy-target="citation-bibtex-text"
-            aria-label="Copy BibTeX"
-            title="Copy BibTeX"
-          >
-            <span class="icon is-small" aria-hidden="true">
-              <i class="far fa-copy"></i>
-            </span>
-          </button>
-          <pre class="citation-bibtex"><code id="citation-bibtex-text">@article{qiu2025cinescale,
+        <div class="citation-card" data-glow-card>
+          <div class="citation-copy">
+            <h2 class="title is-3 has-text-centered"><span aria-hidden="true">📖</span> Citation</h2>
+            <p class="citation-note">If you find CineScale useful in your research or projects, consider citing our paper:</p>
+          </div>
+          <div class="citation-bibtex-shell">
+            <button
+              class="button is-small is-dark citation-copy-button"
+              id="copy-citation"
+              type="button"
+              data-copy-target="citation-bibtex-text"
+              aria-label="Copy BibTeX"
+              title="Copy BibTeX"
+            >
+              <span class="icon is-small" aria-hidden="true">
+                <i class="far fa-copy"></i>
+              </span>
+            </button>
+            <pre class="citation-bibtex"><code id="citation-bibtex-text">@article{qiu2025cinescale,
   title={CineScale: Free Lunch in High-Resolution Cinematic Visual Generation},
   author={Haonan Qiu and Ning Yu and Ziqi Huang and Paul Debevec and Ziwei Liu},
   journal={arXiv preprint arXiv:2508.15774},
   year={2025}
 }
 </code></pre>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+</main>
 
-  <footer class="footer">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-
-
-
-        </div>
-      </div>
-    </div>
-  </div>
+<footer class="footer">
 </footer>
 
 <!-- Statcounter tracking code -->
