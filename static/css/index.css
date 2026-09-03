@@ -1346,7 +1346,7 @@ body::before {
 
 .section {
   position: relative;
-  padding: clamp(5rem, 10vw, 9rem) 1.5rem;
+  padding: clamp(4rem, 7vw, 6.5rem) 1.5rem;
 }
 
 .container.is-max-widescreen {
@@ -2272,6 +2272,145 @@ body::before {
   margin-top: 0;
 }
 
+.rope-ablation-card {
+  width: 100%;
+}
+
+.ablation-matrix-scroll {
+  padding: clamp(1rem, 2vw, 1.5rem);
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background:
+    radial-gradient(460px circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(255, 157, 59, 0.1), transparent 68%),
+    rgba(13, 13, 14, 0.9);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+  scrollbar-color: rgba(255, 153, 53, 0.55) rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+}
+
+.ablation-matrix-scroll:focus-visible {
+  outline: 2px solid var(--orange-bright);
+  outline-offset: 4px;
+}
+
+.ablation-matrix {
+  display: grid;
+  grid-template-columns: minmax(108px, 0.55fr) repeat(4, minmax(190px, 1fr));
+  gap: 0.75rem;
+  min-width: 960px;
+  align-items: center;
+}
+
+.ablation-matrix-row {
+  display: contents;
+}
+
+.ablation-matrix-corner,
+.ablation-column-heading,
+.ablation-row-heading {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  color: #a6a49f;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ablation-matrix-corner,
+.ablation-row-heading {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+  background: #121213;
+}
+
+.ablation-matrix-corner {
+  z-index: 3;
+  color: #777672;
+}
+
+.ablation-row-heading.is-ours {
+  border-color: rgba(255, 150, 51, 0.28);
+  color: var(--orange-bright);
+}
+
+.ablation-row-heading span {
+  margin-left: 0.35rem;
+  color: #ddd9d2;
+  font-size: 0.8em;
+}
+
+.ablation-video-cell {
+  position: relative;
+  display: flex;
+  aspect-ratio: 16 / 9;
+  min-width: 0;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: #09090a;
+}
+
+.ablation-video-cell.is-available {
+  border-color: rgba(255, 150, 51, 0.34);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.ablation-video-cell.is-available.is-magnifying {
+  border-color: rgba(255, 174, 79, 0.72);
+  cursor: crosshair;
+}
+
+.ablation-video-magnifier {
+  z-index: 5;
+  width: min(44%, 116px);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.ablation-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  object-fit: cover;
+}
+
+.ablation-video-cell.is-placeholder {
+  flex-direction: column;
+  gap: 0.2rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.025), transparent 48%),
+    repeating-linear-gradient(135deg, transparent 0 12px, rgba(255, 255, 255, 0.018) 12px 13px),
+    #0b0b0c;
+  color: #777672;
+  font-family: 'Space Mono', monospace;
+  text-transform: uppercase;
+}
+
+.ablation-video-cell.is-placeholder span {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.ablation-video-cell.is-placeholder small {
+  color: #52514e;
+  font-size: 0.52rem;
+  letter-spacing: 0.04em;
+}
+
 .paper-figure-card figcaption {
   display: flex;
   justify-content: space-between;
@@ -2380,8 +2519,8 @@ body::before {
 }
 
 .citation-section {
-  padding-top: clamp(5rem, 11vw, 10rem);
-  padding-bottom: clamp(5rem, 11vw, 10rem);
+  padding-top: clamp(4rem, 7vw, 6.5rem);
+  padding-bottom: clamp(4rem, 7vw, 6.5rem);
 }
 
 .citation-section .column.is-four-fifths {
@@ -2583,7 +2722,7 @@ body::before {
   }
 
   .section {
-    padding: 4.75rem 1rem;
+    padding: 4rem 1rem;
   }
 
   .site-nav {
@@ -2738,6 +2877,24 @@ body::before {
   .paper-figure-card figcaption {
     flex-direction: column;
     gap: 0.4rem;
+  }
+
+  .ablation-matrix-scroll {
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .ablation-matrix {
+    grid-template-columns: 94px repeat(4, 168px);
+    gap: 0.55rem;
+    min-width: 788px;
+  }
+
+  .ablation-matrix-corner,
+  .ablation-column-heading,
+  .ablation-row-heading {
+    min-height: 38px;
+    font-size: 0.58rem;
   }
 
   .continuous-carousel::before,

@@ -561,6 +561,168 @@ document.addEventListener('DOMContentLoaded', function() {
       startAutoRotation();
     });
 
+    const ablationVideos = Array.from(document.querySelectorAll('.ablation-video[data-src]'));
+    const reducedAblationMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const loadAblationVideo = (video) => {
+      if (!video.getAttribute('src') && video.dataset.src) {
+        video.src = video.dataset.src;
+        video.load();
+      }
+    };
+    const playAblationVideo = (video) => {
+      loadAblationVideo(video);
+      if (reducedAblationMotion) {
+        return;
+      }
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    };
+
+    if ('IntersectionObserver' in window) {
+      const ablationVideoObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            playAblationVideo(entry.target);
+          } else {
+            entry.target.pause();
+          }
+        });
+      }, { rootMargin: '160px 0px' });
+      ablationVideos.forEach((video) => ablationVideoObserver.observe(video));
+    } else {
+      ablationVideos.forEach((video) => {
+        loadAblationVideo(video);
+        if (!reducedAblationMotion) {
+          playAblationVideo(video);
+        }
+      });
+    }
+
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      let activeAblationMagnifier = null;
+      let ablationPointerPosition = null;
+      let ablationMagnifierFrame = null;
+
+      const closeAblationMagnifier = () => {
+        if (activeAblationMagnifier) {
+          activeAblationMagnifier.cell.classList.remove('is-magnifying');
+          activeAblationMagnifier.canvas.hidden = true;
+        }
+        activeAblationMagnifier = null;
+        ablationPointerPosition = null;
+        if (ablationMagnifierFrame !== null) {
+          window.cancelAnimationFrame(ablationMagnifierFrame);
+          ablationMagnifierFrame = null;
+        }
+      };
+
+      const renderAblationMagnifier = () => {
+        if (!activeAblationMagnifier || !ablationPointerPosition) {
+          ablationMagnifierFrame = null;
+          return;
+        }
+
+        const { cell, video, canvas } = activeAblationMagnifier;
+        const videoRect = video.getBoundingClientRect();
+        const cellRect = cell.getBoundingClientRect();
+        const x = ablationPointerPosition.clientX;
+        const y = ablationPointerPosition.clientY;
+        const isOverVideo = x >= videoRect.left && x <= videoRect.right
+          && y >= videoRect.top && y <= videoRect.bottom;
+
+        if (!isOverVideo || video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+          canvas.hidden = true;
+          ablationMagnifierFrame = window.requestAnimationFrame(renderAblationMagnifier);
+          return;
+        }
+
+        canvas.hidden = false;
+        const lensWidth = canvas.offsetWidth;
+        const lensHeight = canvas.offsetHeight;
+        const left = Math.max(6, Math.min(cellRect.width - lensWidth - 6, x - cellRect.left - (lensWidth / 2)));
+        const top = Math.max(6, Math.min(cellRect.height - lensHeight - 6, y - cellRect.top - (lensHeight / 2)));
+        canvas.style.left = `${left}px`;
+        canvas.style.top = `${top}px`;
+
+        const normalizedX = (x - videoRect.left) / videoRect.width;
+        const normalizedY = (y - videoRect.top) / videoRect.height;
+        const zoom = 2.5;
+        const elementAspect = videoRect.width / videoRect.height;
+        const intrinsicAspect = video.videoWidth / video.videoHeight;
+        let visibleX = 0;
+        let visibleY = 0;
+        let visibleWidth = video.videoWidth;
+        let visibleHeight = video.videoHeight;
+
+        if (intrinsicAspect > elementAspect) {
+          visibleWidth = video.videoHeight * elementAspect;
+          visibleX = (video.videoWidth - visibleWidth) / 2;
+        } else if (intrinsicAspect < elementAspect) {
+          visibleHeight = video.videoWidth / elementAspect;
+          visibleY = (video.videoHeight - visibleHeight) / 2;
+        }
+
+        const sourceWidth = (lensWidth / videoRect.width) * visibleWidth / zoom;
+        const sourceHeight = (lensHeight / videoRect.height) * visibleHeight / zoom;
+        const focusX = visibleX + (normalizedX * visibleWidth);
+        const focusY = visibleY + (normalizedY * visibleHeight);
+        const sourceX = Math.max(visibleX, Math.min(visibleX + visibleWidth - sourceWidth, focusX - (sourceWidth / 2)));
+        const sourceY = Math.max(visibleY, Math.min(visibleY + visibleHeight - sourceHeight, focusY - (sourceHeight / 2)));
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+        ablationMagnifierFrame = window.requestAnimationFrame(renderAblationMagnifier);
+      };
+
+      ablationVideos.forEach((video) => {
+        const cell = video.closest('.ablation-video-cell');
+        if (!cell) {
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'video-magnifier-lens ablation-video-magnifier';
+        canvas.width = 260;
+        canvas.height = 260;
+        canvas.hidden = true;
+        canvas.setAttribute('aria-hidden', 'true');
+        cell.appendChild(canvas);
+
+        cell.addEventListener('pointerenter', (event) => {
+          if (event.pointerType === 'touch') {
+            return;
+          }
+          closeAblationMagnifier();
+          loadAblationVideo(video);
+          activeAblationMagnifier = { cell, video, canvas };
+          ablationPointerPosition = { clientX: event.clientX, clientY: event.clientY };
+          cell.classList.add('is-magnifying');
+          ablationMagnifierFrame = window.requestAnimationFrame(renderAblationMagnifier);
+        });
+
+        cell.addEventListener('pointermove', (event) => {
+          if (activeAblationMagnifier && activeAblationMagnifier.cell === cell) {
+            ablationPointerPosition = { clientX: event.clientX, clientY: event.clientY };
+          }
+        });
+
+        cell.addEventListener('pointerleave', () => {
+          if (activeAblationMagnifier && activeAblationMagnifier.cell === cell) {
+            closeAblationMagnifier();
+          }
+        });
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeAblationMagnifier();
+        }
+      });
+      window.addEventListener('blur', closeAblationMagnifier);
+    }
+
     document.querySelectorAll('[data-continuous-carousel]').forEach((carousel) => {
       const viewport = carousel.querySelector('.continuous-carousel-viewport');
       const track = carousel.querySelector('.continuous-carousel-track');
