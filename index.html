@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/index.css?v=20260903-5">
+  <link rel="stylesheet" href="static/css/index.css?v=20260904-3">
 
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <script defer src="static/js/bulma-carousel.min.js"></script>
@@ -143,7 +143,11 @@
                 </iframe>
               </div>
             </div>
-            <p class="youtube-caption">Watch in 4K</p>
+            <p class="youtube-caption">
+              <span class="youtube-caption-icon" aria-hidden="true"><i class="fas fa-arrow-up"></i></span>
+              <span>Watch the video above in</span>
+              <strong>4K</strong>
+            </p>
 
             
         </div>
@@ -219,11 +223,58 @@
     <div class="paper-figure-stack">
 
       <figure class="paper-figure-card rope-ablation-card">
-        <div class="ablation-matrix-scroll" data-glow-card tabindex="0" aria-label="RoPE variant video ablation; scroll horizontally to view every cascading step">
-          <div class="ablation-matrix" role="table" aria-label="RoPE variant ablation videos">
+        <header class="ablation-figure-heading">
+          <span>Baseline comparison</span>
+          <h3>No Cascading</h3>
+        </header>
+        <div class="ablation-matrix-scroll" data-glow-card tabindex="0" aria-label="No-cascading comparison; scroll horizontally to view every method">
+          <div class="ablation-comparison-grid" role="table" aria-label="No-cascading comparison videos">
+            <div class="ablation-matrix-row" role="row">
+              <div class="ablation-column-heading" role="columnheader">RoPE</div>
+              <div class="ablation-column-heading" role="columnheader">NTK-RoPE</div>
+              <div class="ablation-column-heading is-ours" role="columnheader">AR-RoPE <span>(Ours)</span></div>
+            </div>
+
+            <div class="ablation-matrix-row" role="row">
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/RoPE_Sigma0_web.mp4"
+                  aria-label="RoPE with no cascading"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/NTK_Sigma0_web.mp4"
+                  aria-label="NTK-RoPE with no cascading"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/AR_Sigma0_web.mp4"
+                  aria-label="AR-RoPE with no cascading"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>No-cascading comparison across the three positional encoding methods. Hover over a video to inspect fine details.</figcaption>
+      </figure>
+
+      <figure class="paper-figure-card rope-ablation-card">
+        <header class="ablation-figure-heading">
+          <span>Step ablation</span>
+          <h3>Cascading Steps</h3>
+        </header>
+        <div class="ablation-matrix-scroll" data-glow-card tabindex="0" aria-label="Cascading-step ablation; scroll horizontally to view every step">
+          <div class="ablation-matrix" role="table" aria-label="Cascading-step ablation videos">
             <div class="ablation-matrix-row" role="row">
               <div class="ablation-matrix-corner" aria-hidden="true"></div>
-              <div class="ablation-column-heading" role="columnheader">No cascading</div>
               <div class="ablation-column-heading" role="columnheader">5 cascading steps</div>
               <div class="ablation-column-heading" role="columnheader">15 cascading steps</div>
               <div class="ablation-column-heading" role="columnheader">25 cascading steps</div>
@@ -234,20 +285,38 @@
               <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
               <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
               <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
             </div>
 
             <div class="ablation-matrix-row" role="row">
               <div class="ablation-row-heading" role="rowheader">NTK-RoPE</div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/NTK_Sigma5_web.mp4"
+                  aria-label="NTK-RoPE with 5 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/NTK_Sigma15_web.mp4"
+                  aria-label="NTK-RoPE with 15 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/NTK_Sigma25_web.mp4"
+                  aria-label="NTK-RoPE with 25 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
             </div>
 
             <div class="ablation-matrix-row" role="row">
               <div class="ablation-row-heading is-ours" role="rowheader">AR-RoPE <span>(Ours)</span></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
               <div class="ablation-video-cell is-available" role="cell">
                 <video
                   class="ablation-video"
@@ -264,11 +333,18 @@
                   muted loop playsinline preload="none"
                 ></video>
               </div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/AR_Sigma25_web.mp4"
+                  aria-label="AR-RoPE with 25 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
             </div>
           </div>
         </div>
-        <figcaption>Ablation across increasing numbers of cascading steps. Hover over an available video to inspect fine details.</figcaption>
+        <figcaption>Cascading-step ablation at 5, 15, and 25 steps. Hover over an available video to inspect fine details.</figcaption>
       </figure>
 
       
