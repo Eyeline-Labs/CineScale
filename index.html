@@ -20,12 +20,12 @@
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/index.css?v=20260904-3">
+  <link rel="stylesheet" href="static/css/index.css?v=20260905-4">
 
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <script defer src="static/js/bulma-carousel.min.js"></script>
   <script defer src="static/js/bulma-slider.min.js"></script>
-  <script defer src="static/js/index.js?v=20260903-3"></script>
+  <script defer src="static/js/index.js?v=20260905-1"></script>
 </head>
 <body>
   <div class="scroll-progress" aria-hidden="true"><span></span></div>
@@ -278,13 +278,50 @@
               <div class="ablation-column-heading" role="columnheader">5 cascading steps</div>
               <div class="ablation-column-heading" role="columnheader">15 cascading steps</div>
               <div class="ablation-column-heading" role="columnheader">25 cascading steps</div>
+              <div class="ablation-column-heading is-detail" role="columnheader">25-step detail <span>3.5&times; crop</span></div>
             </div>
 
             <div class="ablation-matrix-row" role="row">
               <div class="ablation-row-heading" role="rowheader">RoPE</div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
-              <div class="ablation-video-cell is-placeholder" role="cell"><span>Pending</span><small>Video coming soon</small></div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/RoPE_Sigma5_web.mp4"
+                  aria-label="RoPE with 5 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+              <div class="ablation-video-cell is-available" role="cell">
+                <video
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/RoPE_Sigma15_web.mp4"
+                  aria-label="RoPE with 15 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+              </div>
+              <div class="ablation-video-cell is-available has-detail-source" role="cell">
+                <video
+                  id="rope-sigma25-video"
+                  class="ablation-video"
+                  data-src="static/videos/rope-ablation/RoPE_Sigma25_web.mp4"
+                  aria-label="RoPE with 25 cascading steps"
+                  muted loop playsinline preload="none"
+                ></video>
+                <span class="ablation-detail-source-marker" aria-hidden="true"></span>
+              </div>
+              <div class="ablation-video-cell is-detail" role="cell" aria-label="3.5 times detail crop of RoPE with 25 cascading steps">
+                <canvas
+                  class="ablation-detail-canvas"
+                  width="640"
+                  height="360"
+                  data-detail-source="rope-sigma25-video"
+                  data-detail-focus-x="0.54"
+                  data-detail-focus-y="0.857"
+                  data-detail-zoom="3.5"
+                  aria-hidden="true"
+                ></canvas>
+                <span class="ablation-detail-label" aria-hidden="true">3.5&times; detail</span>
+              </div>
             </div>
 
             <div class="ablation-matrix-row" role="row">
@@ -305,13 +342,28 @@
                   muted loop playsinline preload="none"
                 ></video>
               </div>
-              <div class="ablation-video-cell is-available" role="cell">
+              <div class="ablation-video-cell is-available has-detail-source" role="cell">
                 <video
+                  id="ntk-sigma25-video"
                   class="ablation-video"
                   data-src="static/videos/rope-ablation/NTK_Sigma25_web.mp4"
                   aria-label="NTK-RoPE with 25 cascading steps"
                   muted loop playsinline preload="none"
                 ></video>
+                <span class="ablation-detail-source-marker" aria-hidden="true"></span>
+              </div>
+              <div class="ablation-video-cell is-detail" role="cell" aria-label="3.5 times detail crop of NTK-RoPE with 25 cascading steps">
+                <canvas
+                  class="ablation-detail-canvas"
+                  width="640"
+                  height="360"
+                  data-detail-source="ntk-sigma25-video"
+                  data-detail-focus-x="0.54"
+                  data-detail-focus-y="0.857"
+                  data-detail-zoom="3.5"
+                  aria-hidden="true"
+                ></canvas>
+                <span class="ablation-detail-label" aria-hidden="true">3.5&times; detail</span>
               </div>
             </div>
 
@@ -333,18 +385,33 @@
                   muted loop playsinline preload="none"
                 ></video>
               </div>
-              <div class="ablation-video-cell is-available" role="cell">
+              <div class="ablation-video-cell is-available has-detail-source" role="cell">
                 <video
+                  id="ar-sigma25-video"
                   class="ablation-video"
                   data-src="static/videos/rope-ablation/AR_Sigma25_web.mp4"
                   aria-label="AR-RoPE with 25 cascading steps"
                   muted loop playsinline preload="none"
                 ></video>
+                <span class="ablation-detail-source-marker" aria-hidden="true"></span>
+              </div>
+              <div class="ablation-video-cell is-detail" role="cell" aria-label="3.5 times detail crop of AR-RoPE with 25 cascading steps">
+                <canvas
+                  class="ablation-detail-canvas"
+                  width="640"
+                  height="360"
+                  data-detail-source="ar-sigma25-video"
+                  data-detail-focus-x="0.54"
+                  data-detail-focus-y="0.857"
+                  data-detail-zoom="3.5"
+                  aria-hidden="true"
+                ></canvas>
+                <span class="ablation-detail-label" aria-hidden="true">3.5&times; detail</span>
               </div>
             </div>
           </div>
         </div>
-        <figcaption>Cascading-step ablation at 5, 15, and 25 steps. Hover over an available video to inspect fine details.</figcaption>
+        <figcaption>Cascading-step ablation at 5, 15, and 25 steps. The final column permanently enlarges the same foreground-gnome region for direct comparison.</figcaption>
       </figure>
 
       

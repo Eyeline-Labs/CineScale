@@ -2363,9 +2363,9 @@ main,
 
 .ablation-matrix {
   display: grid;
-  grid-template-columns: minmax(108px, 0.48fr) repeat(3, minmax(220px, 1fr));
+  grid-template-columns: minmax(108px, 0.48fr) repeat(3, minmax(180px, 1fr)) minmax(210px, 1.12fr);
   gap: 0.75rem;
-  min-width: 840px;
+  min-width: 960px;
   align-items: center;
 }
 
@@ -2423,6 +2423,17 @@ main,
   color: var(--orange-bright);
 }
 
+.ablation-column-heading.is-detail {
+  flex-direction: column;
+  color: var(--blue);
+}
+
+.ablation-column-heading.is-detail span {
+  margin: 0.12rem 0 0;
+  color: #a9cfff;
+  font-size: 0.75em;
+}
+
 .ablation-row-heading span,
 .ablation-column-heading span {
   margin-left: 0.35rem;
@@ -2446,6 +2457,70 @@ main,
 .ablation-video-cell.is-available {
   border-color: rgba(255, 150, 51, 0.34);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.ablation-video-cell.is-detail {
+  border-color: rgba(104, 168, 255, 0.46);
+  background: #05070a;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32), 0 0 24px rgba(104, 168, 255, 0.08);
+}
+
+.ablation-detail-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #05070a;
+}
+
+.ablation-detail-label {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 2;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid rgba(190, 219, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(5, 9, 14, 0.78);
+  color: #d9eaff;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.ablation-detail-source-marker {
+  position: absolute;
+  right: auto;
+  bottom: 0;
+  left: 39.714%;
+  z-index: 2;
+  width: 28.571%;
+  height: 28.571%;
+  border: 1px solid rgba(166, 207, 255, 0.82);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(4, 8, 13, 0.55), inset 0 0 20px rgba(104, 168, 255, 0.08);
+  pointer-events: none;
+}
+
+.ablation-detail-source-marker::after {
+  position: absolute;
+  right: -1px;
+  bottom: 100%;
+  padding: 0.15rem 0.28rem;
+  border-radius: 4px 4px 0 0;
+  background: rgba(104, 168, 255, 0.92);
+  color: #07101a;
+  content: 'Detail';
+  font-family: 'Space Mono', monospace;
+  font-size: 0.42rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .ablation-video-cell.is-available.is-magnifying {
@@ -2966,9 +3041,9 @@ main,
   }
 
   .ablation-matrix {
-    grid-template-columns: 94px repeat(3, 168px);
+    grid-template-columns: 94px repeat(3, 168px) 190px;
     gap: 0.55rem;
-    min-width: 615px;
+    min-width: 824px;
   }
 
   .ablation-comparison-grid {

@@ -600,6 +600,109 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
+    const drawAblationDetail = (video, canvas) => {
+      if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+        return;
+      }
+
+      const context = canvas.getContext('2d');
+      if (!context) {
+        return;
+      }
+
+      const zoom = Math.max(1, Number.parseFloat(canvas.dataset.detailZoom) || 2.5);
+      const focusX = Math.max(0, Math.min(1, Number.parseFloat(canvas.dataset.detailFocusX) || 0.5));
+      const focusY = Math.max(0, Math.min(1, Number.parseFloat(canvas.dataset.detailFocusY) || 0.5));
+      const videoAspect = video.videoWidth / video.videoHeight;
+      const canvasAspect = canvas.width / canvas.height;
+      let sourceWidth;
+      let sourceHeight;
+
+      if (videoAspect >= canvasAspect) {
+        sourceHeight = video.videoHeight / zoom;
+        sourceWidth = sourceHeight * canvasAspect;
+      } else {
+        sourceWidth = video.videoWidth / zoom;
+        sourceHeight = sourceWidth / canvasAspect;
+      }
+
+      const sourceX = Math.max(0, Math.min(
+        video.videoWidth - sourceWidth,
+        (focusX * video.videoWidth) - (sourceWidth / 2),
+      ));
+      const sourceY = Math.max(0, Math.min(
+        video.videoHeight - sourceHeight,
+        (focusY * video.videoHeight) - (sourceHeight / 2),
+      ));
+
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(
+        video,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+    };
+
+    document.querySelectorAll('.ablation-detail-canvas[data-detail-source]').forEach((canvas) => {
+      const video = document.getElementById(canvas.dataset.detailSource);
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+
+      const usesVideoFrameCallback = typeof video.requestVideoFrameCallback === 'function';
+      let frameRequest = null;
+
+      const scheduleDetailFrame = () => {
+        if (frameRequest !== null || video.paused || video.ended) {
+          return;
+        }
+        frameRequest = usesVideoFrameCallback
+          ? video.requestVideoFrameCallback(renderDetailFrame)
+          : window.requestAnimationFrame(renderDetailFrame);
+      };
+
+      const renderDetailFrame = () => {
+        frameRequest = null;
+        drawAblationDetail(video, canvas);
+        scheduleDetailFrame();
+      };
+
+      const startDetail = () => {
+        drawAblationDetail(video, canvas);
+        scheduleDetailFrame();
+      };
+
+      const stopDetail = () => {
+        if (frameRequest !== null) {
+          if (usesVideoFrameCallback && typeof video.cancelVideoFrameCallback === 'function') {
+            video.cancelVideoFrameCallback(frameRequest);
+          } else {
+            window.cancelAnimationFrame(frameRequest);
+          }
+          frameRequest = null;
+        }
+        drawAblationDetail(video, canvas);
+      };
+
+      video.addEventListener('loadeddata', startDetail);
+      video.addEventListener('seeked', () => drawAblationDetail(video, canvas));
+      video.addEventListener('play', startDetail);
+      video.addEventListener('pause', stopDetail);
+      video.addEventListener('ended', stopDetail);
+
+      if (video.readyState >= 2) {
+        startDetail();
+      }
+    });
+
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
       let activeAblationMagnifier = null;
       let ablationPointerPosition = null;
