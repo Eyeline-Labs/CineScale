@@ -2496,10 +2496,10 @@ main,
   position: absolute;
   right: auto;
   bottom: 0;
-  left: 39.714%;
+  left: 48%;
   z-index: 2;
-  width: 28.571%;
-  height: 28.571%;
+  width: 20%;
+  height: 20%;
   border: 1px solid rgba(166, 207, 255, 0.82);
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(4, 8, 13, 0.55), inset 0 0 20px rgba(104, 168, 255, 0.08);
