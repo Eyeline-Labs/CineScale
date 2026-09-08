@@ -1641,6 +1641,11 @@ main,
   display: block;
 }
 
+.publication-title-text .title-phrase {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 .title-logo {
   width: auto;
   height: clamp(104px, 15vw, 164px);
