@@ -75,31 +75,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.querySelectorAll('[data-glow-card]').forEach((card) => {
+      const resetGlow = () => {
+        card.style.setProperty('--glow-x', '50%');
+        card.style.setProperty('--glow-y', '0%');
+      };
+
       card.addEventListener('pointermove', (event) => {
         const bounds = card.getBoundingClientRect();
-        const x = ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 100;
-        const y = ((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 100;
+        const x = Math.min(100, Math.max(0, ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 100));
+        const y = Math.min(100, Math.max(0, ((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 100));
         card.style.setProperty('--glow-x', `${x}%`);
         card.style.setProperty('--glow-y', `${y}%`);
       });
+      card.addEventListener('pointerleave', resetGlow);
+      card.addEventListener('pointercancel', resetGlow);
+      card.addEventListener('lostpointercapture', resetGlow);
     });
-
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      let pointerFrame = null;
-      let pointerX = 72;
-      let pointerY = 10;
-      document.addEventListener('pointermove', (event) => {
-        pointerX = (event.clientX / Math.max(window.innerWidth, 1)) * 100;
-        pointerY = (event.clientY / Math.max(window.innerHeight, 1)) * 100;
-        if (pointerFrame === null) {
-          pointerFrame = window.requestAnimationFrame(() => {
-            document.documentElement.style.setProperty('--pointer-x', `${pointerX}%`);
-            document.documentElement.style.setProperty('--pointer-y', `${pointerY}%`);
-            pointerFrame = null;
-          });
-        }
-      }, { passive: true });
-    }
 
     var options = {
 			slidesToScroll: 1,

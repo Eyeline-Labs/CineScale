@@ -190,6 +190,17 @@ body {
   flex: 0 0 auto;
 }
 
+.affiliation-logo-ntu .ntu-logo-text-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-clip-path: inset(29% 5% 41% 34%);
+  clip-path: inset(29% 5% 41% 34%);
+  filter: brightness(0) invert(1);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
 .affiliation-logo-eyeline img {
   width: 205px;
   height: auto;
@@ -1309,7 +1320,7 @@ body {
   min-width: 320px;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at var(--pointer-x, 72%) var(--pointer-y, 10%), rgba(255, 126, 31, 0.08), transparent 27rem),
+    radial-gradient(circle at 72% 10%, rgba(255, 126, 31, 0.08), transparent 27rem),
     var(--bg);
   color: var(--text);
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -1752,6 +1763,15 @@ main,
   font-size: clamp(0.95rem, 1.6vw, 1.14rem);
   font-weight: 500;
   line-height: 1.75;
+}
+
+.hero-research-note .hero-recommendation {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 159, 67, 0.22);
+  color: #c8c4bc;
+  font-size: clamp(0.86rem, 1.35vw, 1rem);
+  line-height: 1.65;
 }
 
 .hero-research-note strong {
