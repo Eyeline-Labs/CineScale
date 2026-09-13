@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/index.css?v=20260908-3">
+  <link rel="stylesheet" href="static/css/index.css?v=20260913-2">
 
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <script defer src="static/js/bulma-carousel.min.js"></script>
@@ -418,10 +418,10 @@
 
       
       <figure class="paper-figure-card">
-        <a class="paper-figure-frame" href="static/figures/4K_Comparison_web.png?v=efe98bc0" target="_blank" aria-label="Open the 4K comparison figure at full resolution">
+        <a class="paper-figure-frame" href="static/figures/4K_Comparison_web.png?v=256e2fe1" target="_blank" aria-label="Open the 4K comparison figure at full resolution">
           <img
-            src="static/figures/4K_Comparison_web.png?v=efe98bc0"
-            alt="4K video generation comparison across Kling 3.0, LTX 2.0, Wan 2.2, and CineScale"
+            src="static/figures/4K_Comparison_web.png?v=256e2fe1"
+            alt="4K video generation comparison across Kling 3.0, LTX 2.0, Wan 2.2, UltraWan, and CineScale"
             loading="lazy"
           />
         </a>
@@ -508,6 +508,87 @@
   </div>
 </section>
 <!-- End video grid section -->
+
+<section class="section vbench-section" id="vbench" data-section>
+  <div class="container is-max-widescreen">
+    <div class="section-heading">
+      <p class="section-eyebrow">Quantitative evaluation</p>
+      <h2 class="title is-3 has-text-centered">VBench Comparison</h2>
+      <p class="section-lede">Comparison across target resolutions, covering semantic consistency, temporal quality, and perceptual fidelity.</p>
+    </div>
+
+    <figure class="vbench-card" data-glow-card>
+      <div class="vbench-table-scroll" tabindex="0" role="region" aria-label="Scrollable VBench comparison table">
+        <table class="vbench-table">
+          <caption class="is-sr-only">VBench comparison across different target resolutions</caption>
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">Subject Consistency<span aria-label="higher is better">&uarr;</span></th>
+              <th scope="col">Background Consistency<span aria-label="higher is better">&uarr;</span></th>
+              <th scope="col">Temporal Flickering<span aria-label="higher is better">&uarr;</span></th>
+              <th scope="col">Aesthetic Quality<span aria-label="higher is better">&uarr;</span></th>
+              <th scope="col">Imaging Quality<span aria-label="higher is better">&uarr;</span></th>
+              <th scope="col">Average<span aria-label="higher is better">&uarr;</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="vbench-group-row">
+              <th colspan="7" scope="rowgroup"><span>Tuning-Free</span></th>
+            </tr>
+            <tr>
+              <th scope="row">Wan2.1-720p</th>
+              <td>0.9570</td><td>0.9605</td><td>0.9845</td><td>0.5646</td><td>0.6828</td><td>0.8299</td>
+            </tr>
+            <tr>
+              <th scope="row">Wan2.1-1K</th>
+              <td>0.9540</td><td>0.9645</td><td>0.9898</td><td>0.4989</td><td>0.5826</td><td>0.7980</td>
+            </tr>
+            <tr>
+              <th scope="row">Wan2.1-4K</th>
+              <td>0.9470</td><td>0.9760</td><td><u>0.9950</u></td><td>0.2880</td><td>0.3740</td><td>0.7160</td>
+            </tr>
+            <tr class="vbench-ours">
+              <th scope="row">CineScale-2K <span class="ours-badge">Ours</span></th>
+              <td><em>0.9734</em></td><td><u>0.9777</u></td><td>0.9795</td><td><strong>0.6488</strong></td><td><u>0.7156</u></td><td><strong>0.8581</strong></td>
+            </tr>
+            <tr class="vbench-group-row">
+              <th colspan="7" scope="rowgroup"><span>Tuning-Based</span></th>
+            </tr>
+            <tr>
+              <th scope="row">UltraWan-1K</th>
+              <td>0.9586</td><td>0.9661</td><td>0.9853</td><td>0.5686</td><td>0.6966</td><td>0.8350</td>
+            </tr>
+            <tr>
+              <th scope="row">UltraWan-4K</th>
+              <td>0.9581</td><td>0.9611</td><td>0.9771</td><td>0.5769</td><td><em>0.7144</em></td><td>0.8375</td>
+            </tr>
+            <tr>
+              <th scope="row">UltraGen-1080P</th>
+              <td><u>0.9771</u></td><td><u>0.9777</u></td><td><strong>0.9961</strong></td><td>0.5819</td><td><strong>0.7350</strong></td><td><u>0.8536</u></td>
+            </tr>
+            <tr>
+              <th scope="row">UltraGen-4K</th>
+              <td><strong>0.9854</strong></td><td><strong>0.9894</strong></td><td><em>0.9933</em></td><td>0.5787</td><td>0.6832</td><td><em>0.8460</em></td>
+            </tr>
+            <tr>
+              <th scope="row">LUVE-2K</th>
+              <td>0.9583</td><td>0.9676</td><td>0.9818</td><td><u>0.5978</u></td><td>0.7115</td><td>0.8434</td>
+            </tr>
+            <tr>
+              <th scope="row">LUVE-4K</th>
+              <td>0.9536</td><td>0.9646</td><td>0.9809</td><td><em>0.5891</em></td><td>0.7133</td><td>0.8403</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        <span>Best, second-best, and third-best results are shown in <strong>bold</strong>, <u>underline</u>, and <em>italics</em>.</span>
+        <span>4K baseline scores follow UltraGen.</span>
+      </figcaption>
+    </figure>
+  </div>
+</section>
 
 <section class="section citation-section" id="citation" data-section>
   <div class="container is-max-desktop">
