@@ -1618,6 +1618,36 @@ main,
   animation: status-pulse 2.4s ease-in-out infinite;
 }
 
+.paper-update-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: min(100%, 620px);
+  margin: 0 auto 1.7rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(255, 159, 66, 0.3);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 124, 24, 0.12), rgba(255, 255, 255, 0.045));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px rgba(0, 0, 0, 0.22);
+  color: #d8d6d1;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.paper-update-notice p {
+  margin: 0;
+}
+
+.paper-update-notice strong {
+  color: var(--orange-bright);
+}
+
+.paper-update-notice .status-dot {
+  flex: 0 0 auto;
+}
+
 @keyframes status-pulse {
   50% { opacity: 0.55; transform: scale(0.82); }
 }
@@ -3086,6 +3116,12 @@ main,
   .hero-kicker {
     margin-bottom: 1.35rem;
     font-size: 0.57rem;
+  }
+
+  .paper-update-notice {
+    width: min(100%, 420px);
+    border-radius: 14px;
+    font-size: 0.64rem;
   }
 
   .publication-title {
