@@ -117,7 +117,33 @@ torchrun --standalone --nproc_per_node=5 CineScale/Wan2.2/cinescale.py \
   --offload_model true 
 ```
 
-Wan2.2 TI2V-5B checkpoints are also supported in prompt-only mode. The model
+### Video-to-Video (V2V)
+
+Add `--input_video` to refine an existing video. The prompt in `prompts.json`
+guides the refinement.
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1,2,3,4 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+torchrun --standalone --nproc_per_node=5 CineScale/Wan2.2/cinescale.py \
+  --input_video path/to/input.mp4 \
+  --prompts_json CineScale/Wan2.2/prompts.json \
+  --output_dir CineScale/v2v_latents \
+  --ckpt_dir Wan2.2-T2V-A14B \
+  --size '3840*2160' \
+  --frame_num 41 \
+  --round_noise_steps 25 \
+  --ulysses_size 5 \
+  --dit_fsdp \
+  --t5_cpu \
+  --offload_model true
+```
+
+CineScale samples up to `--frame_num` frames, VAE-encodes the video, bilinearly
+upsamples its latent to `--size`, and runs high-resolution refinement. Keep
+`--round_noise_steps` below `--sample_steps`; a full restart discards the input.
+
+Wan2.2 TI2V-5B checkpoints are also supported. The model
 variant is detected from the standard checkpoint layout, or it can be selected
 explicitly:
 
