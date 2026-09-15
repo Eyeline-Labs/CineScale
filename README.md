@@ -164,8 +164,10 @@ sampling steps, and shift 5.0 unless those settings are overridden.
 
 Wan2.1 T2V-1.3B checkpoints are supported through the single-DiT path. Its
 standard checkpoint layout can be detected automatically, or selected
-explicitly. Tiled AR-RoPE uses the model's native 52-by-30 transformer grid,
-with maximum relative offsets `x=51` and `y=29`:
+explicitly. It generates its prompt base at `832*480` while using the same
+80-by-45 maximum-reference grid as Wan2.2 A14B, with 21-by-12 query tiles,
+horizontal/vertical thresholds of 16/9, and maximum zero-based relative
+offsets `x=79` and `y=44`:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 \
@@ -184,7 +186,7 @@ torchrun --standalone --nproc_per_node=4 CineScale/Wan2.2/cinescale.py \
   --offload_model true
 ```
 
-This path uses a native `832*480` prompt base, the Wan2.1 VAE, a single DiT,
+This path uses an `832*480` prompt base, the Wan2.1 VAE, a single DiT,
 16 FPS, 50 sampling steps, and shift 8.0 unless overridden.
 When decoding its high-resolution latent payloads, CineScale automatically uses
 `64*64` VAE latent tiles in both spatial dimensions. The tile size can be
