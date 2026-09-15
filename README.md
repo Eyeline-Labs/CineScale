@@ -59,26 +59,22 @@ model because CineScale focuses on recovering fine-grained spatial details
 while preserving the temporal behavior and semantic structure established by
 the low-resolution generation.
 
-**VBench results across target resolutions (higher is better):**
+**VBench comparison across different target resolutions.** SC: Subject Consistency; BC: Background Consistency; TF: Temporal Flickering; AQ: Aesthetic Quality; IQ: Imaging Quality. Higher is better for every metric. The best, second-best, and third-best results are marked in **bold**, <u>underline</u>, and *italics*, respectively.
 
-| Resolution | Method | Subject Consistency | Background Consistency | Motion Smoothness | Aesthetic Quality | Imaging Quality |
-|---|---|---:|---:|---:|---:|---:|
-| 1088 x 1920 | LTX (2B) | 0.935 | 0.951 | 0.989 | 0.607 | 0.668 |
-| 1088 x 1920 | Wan-DI | 0.935 | **0.975** | 0.989 | 0.641 | 0.598 |
-| 1088 x 1920 | SeedVR2 (3B) | **0.966** | 0.971 | **0.990** | 0.676 | 0.683 |
-| 1088 x 1920 | **CineScale (1.3B)** | 0.937 | 0.974 | **0.990** | **0.679** | **0.724** |
-| 1920 x 3328 | LTX (2B) | - | 0.975 | - | 0.299 | 0.302 |
-| 1920 x 3328 | Wan-DI | - | **0.978** | - | 0.319 | 0.314 |
-| 1920 x 3328 | Upscale-A-Video | - | 0.974 | - | **0.661** | 0.680 |
-| 1920 x 3328 | **CineScale (1.3B)** | - | 0.975 | - | 0.659 | **0.726** |
-| 1080P | CogVideoX | 0.946 | 0.959 | 0.990 | 0.514 | 0.577 |
-| 1080P | HunyuanVideo | **0.980** | **0.984** | **0.997** | 0.589 | 0.624 |
-| 1080P | Wan-DI | 0.977 | 0.976 | **0.997** | 0.432 | 0.453 |
-| 1080P | **CineScale (1.3B)** | 0.970 | 0.977 | 0.991 | **0.680** | **0.726** |
-| 4K | CogVideoX | 0.947 | 0.958 | 0.990 | 0.507 | 0.571 |
-| 4K | HunyuanVideo | **0.996** | **0.997** | **0.998** | 0.397 | 0.440 |
-| 4K | Wan-DI | 0.947 | 0.976 | 0.995 | 0.288 | 0.374 |
-| 4K | **CineScale (1.3B)** | 0.955 | 0.979 | 0.992 | **0.693** | **0.735** |
+| Method | SC ↑ | BC ↑ | TF ↑ | AQ ↑ | IQ ↑ | Average ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| *Tuning-Free* | | | | | | |
+| Wan2.1-720p | 0.9570 | 0.9605 | 0.9845 | 0.5646 | 0.6828 | 0.8299 |
+| Wan2.1-1K | 0.9540 | 0.9645 | 0.9898 | 0.4989 | 0.5826 | 0.7980 |
+| Wan2.1-4K | 0.9470 | 0.9760 | <u>0.9950</u> | 0.2880 | 0.3740 | 0.7160 |
+| CineScale-2K (Ours) | *0.9734* | <u>0.9777</u> | 0.9795 | **0.6488** | <u>0.7156</u> | **0.8581** |
+| *Tuning-Based* | | | | | | |
+| UltraWan-1K | 0.9586 | 0.9661 | 0.9853 | 0.5686 | 0.6966 | 0.8350 |
+| UltraWan-4K | 0.9581 | 0.9611 | 0.9771 | 0.5769 | *0.7144* | 0.8375 |
+| UltraGen-1080P | <u>0.9771</u> | <u>0.9777</u> | **0.9961** | 0.5819 | **0.7350** | <u>0.8536</u> |
+| UltraGen-4K | **0.9854** | **0.9894** | *0.9933* | 0.5787 | 0.6832 | *0.8460* |
+| LUVE-2K | 0.9583 | 0.9676 | 0.9818 | <u>0.5978</u> | 0.7115 | 0.8434 |
+| LUVE-4K | 0.9536 | 0.9646 | 0.9809 | *0.5891* | 0.7133 | 0.8403 |
 
 
 ## ⚙️ Setup
@@ -121,6 +117,53 @@ torchrun --standalone --nproc_per_node=5 CineScale/Wan2.2/cinescale.py \
   --offload_model true 
 ```
 
+Wan2.2 TI2V-5B checkpoints are also supported in prompt-only mode. The model
+variant is detected from the standard checkpoint layout, or it can be selected
+explicitly:
+
+```bash
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+python CineScale/Wan2.2/cinescale.py \
+  --prompts_json CineScale/Wan2.2/prompts.json \
+  --output_dir CineScale/example_videos_5b \
+  --ckpt_dir Wan2.2-TI2V-5B \
+  --model_variant ti2v-5B \
+  --offload_model true \
+  --convert_model_dtype \
+  --t5_cpu
+```
+
+The 5B path uses its native `1280*704` prompt base, Wan2.2 VAE, 24 FPS, 50
+sampling steps, and shift 5.0 unless those settings are overridden.
+
+Wan2.1 T2V-1.3B checkpoints are supported through the single-DiT path. Its
+standard checkpoint layout can be detected automatically, or selected
+explicitly. Tiled AR-RoPE uses the model's native 52-by-30 transformer grid,
+with maximum relative offsets `x=51` and `y=29`:
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+torchrun --standalone --nproc_per_node=4 CineScale/Wan2.2/cinescale.py \
+  --prompts_json CineScale/Wan2.2/prompts.json \
+  --output_dir CineScale/example_videos_1_3b \
+  --ckpt_dir Wan2.1-T2V-1.3B \
+  --model_variant wan2.1-t2v-1.3B \
+  --block_tiled_self_attn true \
+  --frame_num 41 \
+  --round_noise_steps 40 \
+  --ulysses_size 4 \
+  --dit_fsdp \
+  --t5_cpu \
+  --offload_model true
+```
+
+This path uses a native `832*480` prompt base, the Wan2.1 VAE, a single DiT,
+16 FPS, 50 sampling steps, and shift 8.0 unless overridden.
+When decoding its high-resolution latent payloads, CineScale automatically uses
+`64*64` VAE latent tiles in both spatial dimensions. The tile size can be
+overridden with `--vae_decode_tile_height` and `--vae_decode_tile_width`.
+
 To decode the video, run: 
 
 ```bash
@@ -129,6 +172,27 @@ python CineScale/Wan2.2/cinescale.py \
   --decode_latent path/to/video_latent.pt \
   --ckpt_dir checkpoint/to/model_weights/Wan2.2-T2V-A14B
 ```
+
+To inspect, batch-decode, and optionally score every completed latent payload,
+use `vbench_batch.py`. The VAE is loaded once and the decoded MP4 files are
+written to a separate directory:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+python CineScale/Wan2.2/vbench_batch.py \
+  --latents_dir CineScale/example_videos_1_3b \
+  --videos_dir CineScale/vbench_videos_1_3b \
+  --prompts_json CineScale/Wan2.2/prompts.json \
+  --ckpt_dir Wan2.1-T2V-1.3B \
+  --model_variant wan2.1-t2v-1.3B \
+  --latent_key final_latent \
+  --run_vbench
+```
+
+The script prints the stored prompt for every `.pt`, skips existing MP4 files
+unless `--overwrite` is supplied, writes a JSON manifest beside the video
+directory, and runs the six dimensions supported by VBench custom-input mode.
+Use `--list_only` to inspect payloads without decoding them.
 
 
 
