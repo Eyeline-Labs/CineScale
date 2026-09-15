@@ -580,6 +580,10 @@ body {
   transform: translateY(-2px);
 }
 
+.paper-figure-frame picture {
+  display: block;
+}
+
 .paper-figure-frame img {
   display: block;
   width: 100%;
