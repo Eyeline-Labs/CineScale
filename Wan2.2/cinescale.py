@@ -8,7 +8,7 @@ import os
 import random
 import re
 import sys
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +24,114 @@ WAN_ROOT = ROOT if (ROOT / "wan").exists() else ROOT / "Wan2.2"
 if str(WAN_ROOT) not in sys.path:
     sys.path.insert(0, str(WAN_ROOT))
 
+
+MODEL_VARIANTS = {
+    "t2v-A14B": {
+        "pipeline": "WanT2V",
+        "prompt_base_size": "1280*720",
+        "vae_version": "2.1",
+        "model_version": "2.2",
+        "ar_max_relative_y": 44,
+        "ar_max_relative_x": 79,
+        "vae_decode_tile_height": None,
+        "vae_decode_tile_width": 128,
+    },
+    "ti2v-5B": {
+        "pipeline": "WanTI2V",
+        "prompt_base_size": "1280*704",
+        "vae_version": "2.2",
+        "model_version": "2.2",
+        "ar_max_relative_y": 44,
+        "ar_max_relative_x": 79,
+        "vae_decode_tile_height": None,
+        "vae_decode_tile_width": 128,
+    },
+    "wan2.1-t2v-1.3B": {
+        "pipeline": "WanT2VSingle",
+        "prompt_base_size": "832*480",
+        "vae_version": "2.1",
+        "model_version": "2.1",
+        "ar_max_relative_y": 44,
+        "ar_max_relative_x": 79,
+        "vae_decode_tile_height": 64,
+        "vae_decode_tile_width": 64,
+    },
+}
+
+
+def parse_model_variant(value):
+    normalized = value.strip().lower().replace("_", "-")
+    aliases = {
+        "auto": "auto",
+        "14b": "t2v-A14B",
+        "a14b": "t2v-A14B",
+        "t2v-a14b": "t2v-A14B",
+        "5b": "ti2v-5B",
+        "ti2v-5b": "ti2v-5B",
+        "1.3b": "wan2.1-t2v-1.3B",
+        "t2v-1.3b": "wan2.1-t2v-1.3B",
+        "wan2.1-1.3b": "wan2.1-t2v-1.3B",
+        "wan2.1-t2v-1.3b": "wan2.1-t2v-1.3B",
+    }
+    try:
+        return aliases[normalized]
+    except KeyError as exc:
+        choices = "auto, t2v-A14B, ti2v-5B, wan2.1-t2v-1.3B"
+        raise argparse.ArgumentTypeError(
+            f"Unknown model variant '{value}'. Expected one of: {choices}.") from exc
+
+
+def _checkpoint_config(checkpoint_dir):
+    config_path = Path(checkpoint_dir) / "config.json"
+    if not config_path.is_file():
+        return {}
+    try:
+        with config_path.open(encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def detect_model_variant(checkpoint_dir):
+    checkpoint_dir = Path(checkpoint_dir)
+    checkpoint_config = _checkpoint_config(checkpoint_dir)
+    model_type = str(checkpoint_config.get("model_type", "")).lower()
+    directory_name = checkpoint_dir.name.lower()
+
+    if ((checkpoint_dir / "low_noise_model").is_dir()
+            and (checkpoint_dir / "high_noise_model").is_dir()):
+        return "t2v-A14B"
+    if (checkpoint_dir / "Wan2.2_VAE.pth").is_file():
+        return "ti2v-5B"
+    if (("1.3b" in directory_name and "t2v" in directory_name)
+            or (model_type == "t2v"
+                and checkpoint_config.get("dim") == 1536
+                and checkpoint_config.get("num_heads") == 12)):
+        return "wan2.1-t2v-1.3B"
+    if (checkpoint_dir / "Wan2.1_VAE.pth").is_file():
+        return "t2v-A14B"
+
+    if model_type == "ti2v":
+        return "ti2v-5B"
+    if model_type == "t2v":
+        return "t2v-A14B"
+
+    if "ti2v" in directory_name and "5b" in directory_name:
+        return "ti2v-5B"
+    if "t2v" in directory_name and "a14b" in directory_name:
+        return "t2v-A14B"
+
+    raise ValueError(
+        "Could not detect the Wan model variant from checkpoint directory "
+        f"'{checkpoint_dir}'. Pass --model_variant t2v-A14B or "
+        "--model_variant ti2v-5B or --model_variant "
+        "wan2.1-t2v-1.3B explicitly.")
+
+
+def resolve_model_variant(requested_variant, checkpoint_dir):
+    if requested_variant != "auto":
+        return requested_variant
+    return detect_model_variant(checkpoint_dir)
 
 
 def parse_torch_dtype(value):
@@ -77,7 +185,7 @@ def is_main_process():
 def unique_dit_models(model):
     seen = set()
     result = []
-    for name in ("low_noise_model", "high_noise_model"):
+    for name in ("low_noise_model", "high_noise_model", "model"):
         dit_model = getattr(model, name, None)
         if dit_model is None or id(dit_model) in seen:
             continue
@@ -95,9 +203,16 @@ def offload_dit_models(model):
 
 def set_vae_dtype(vae, dtype):
     vae.dtype = dtype
-    vae.mean = vae.mean.to(dtype=dtype, device=vae.device)
-    vae.std = vae.std.to(dtype=dtype, device=vae.device)
-    vae.scale = [vae.mean, 1.0 / vae.std]
+    if hasattr(vae, "mean") and hasattr(vae, "std"):
+        vae.mean = vae.mean.to(dtype=dtype, device=vae.device)
+        vae.std = vae.std.to(dtype=dtype, device=vae.device)
+        vae.scale = [vae.mean, 1.0 / vae.std]
+    else:
+        vae.scale = [
+            value.to(dtype=dtype, device=vae.device)
+            if isinstance(value, torch.Tensor) else value
+            for value in vae.scale
+        ]
     vae.model.to(device=vae.device, dtype=dtype)
 
 
@@ -109,6 +224,16 @@ def offload_vae_model(model):
         torch.cuda.empty_cache()
 
 
+def onload_vae_model(model):
+    vae = model.vae
+    if next(vae.model.parameters()).device.type == "cpu":
+        vae.model.to(device=vae.device, dtype=vae.dtype)
+        if hasattr(vae, "mean") and hasattr(vae, "std"):
+            vae.mean = vae.mean.to(device=vae.device, dtype=vae.dtype)
+            vae.std = vae.std.to(device=vae.device, dtype=vae.dtype)
+            vae.scale = [vae.mean, 1.0 / vae.std]
+
+
 def onload_dit_models(model):
     for _, dit_model in unique_dit_models(model):
         if next(dit_model.parameters()).device.type == "cpu":
@@ -116,9 +241,28 @@ def onload_dit_models(model):
     torch.cuda.empty_cache()
 
 
-def make_model_config(wan_configs):
-    cfg = copy.deepcopy(wan_configs["t2v-A14B"])
+def make_model_config(wan_configs, model_variant):
+    cfg = copy.deepcopy(wan_configs[model_variant])
     return cfg
+
+
+def prompt_base_size_for_variant(model_variant):
+    return MODEL_VARIANTS[model_variant]["prompt_base_size"]
+
+
+def resolve_vae_decode_tile_size(model_variant, tile_height=None,
+                                 tile_width=None):
+    variant = MODEL_VARIANTS[model_variant]
+    if tile_height is None:
+        tile_height = variant["vae_decode_tile_height"]
+    if tile_width is None:
+        tile_width = variant["vae_decode_tile_width"]
+    if tile_height is not None and tile_height <= 0:
+        raise ValueError("VAE decode tile height must be positive.")
+    if tile_width is not None and tile_width <= 0:
+        raise ValueError("VAE decode tile width must be positive.")
+    return tile_height, tile_width
+
 
 def parse_size(size):
     width, height = size.lower().split("*")
@@ -316,7 +460,9 @@ def move_scheduler_to_device(scheduler, device):
 
 def set_block_tiled_self_attention(model, enabled, tile_height, tile_width,
                                    global_rope_threshold_y,
-                                   global_rope_threshold_x):
+                                   global_rope_threshold_x,
+                                   max_relative_y=44,
+                                   max_relative_x=79):
     if enabled and min(tile_height, tile_width) <= 0:
         raise ValueError(
             "Block tiled self-attention tile must be positive."
@@ -327,6 +473,7 @@ def set_block_tiled_self_attention(model, enabled, tile_height, tile_width,
             "Block tiled self-attention global RoPE thresholds must be "
             "non-negative."
         )
+
     def set_model_block_tiling(wan_model):
         target_model = getattr(wan_model, "module", wan_model)
         for block in target_model.blocks:
@@ -337,31 +484,36 @@ def set_block_tiled_self_attention(model, enabled, tile_height, tile_width,
                 global_rope_threshold_y)
             block.self_attn.block_tiled_attn_global_rope_threshold_x = (
                 global_rope_threshold_x)
+            block.self_attn.block_tiled_attn_max_relative_y = max_relative_y
+            block.self_attn.block_tiled_attn_max_relative_x = max_relative_x
 
     for _, dit_model in unique_dit_models(model):
         set_model_block_tiling(dit_model)
 
 
-def set_spatial_ntk_rope_factor(model, factor):
-    """Set Wan's spatial RoPE frequencies using an NTK extension factor."""
-    if factor <= 0:
-        raise ValueError("--rope_factor must be greater than zero.")
+def prepare_dit_for_timestep(model, timestep, boundary, offload_model):
+    if boundary is not None:
+        return model._prepare_model_for_timestep(timestep, boundary,
+                                                 offload_model)
 
-    from wan.modules.model import rope_params
+    dit_model = model.model
+    if offload_model or model.init_on_cpu:
+        if next(dit_model.parameters()).device.type == "cpu":
+            dit_model.to(model.device)
+    return dit_model
 
-    for _, dit_model in unique_dit_models(model):
-        target_model = getattr(dit_model, "module", dit_model)
-        head_dim = target_model.dim // target_model.num_heads
-        temporal_dim = head_dim - 4 * (head_dim // 6)
-        spatial_dim = 2 * (head_dim // 6)
-        spatial_theta = 10000.0 * factor**(
-            spatial_dim / (spatial_dim - 2))
-        freq_device = target_model.patch_embedding.weight.device
-        target_model.freqs = torch.cat([
-            rope_params(1024, temporal_dim, theta=10000.0),
-            rope_params(1024, spatial_dim, theta=spatial_theta),
-            rope_params(1024, spatial_dim, theta=spatial_theta),
-        ], dim=1).to(freq_device)
+
+def guide_scale_for_timestep(guide_scale, timestep, boundary):
+    if not isinstance(guide_scale, (tuple, list)):
+        return guide_scale
+    if len(guide_scale) != 2:
+        raise ValueError("Guide scale sequences must contain exactly two values.")
+    if boundary is None:
+        if guide_scale[0] != guide_scale[1]:
+            raise ValueError(
+                "A single-DiT model requires one guide scale value.")
+        return guide_scale[0]
+    return guide_scale[1] if timestep.item() >= boundary else guide_scale[0]
 
 
 def predict_cond_uncond(model,
@@ -374,11 +526,13 @@ def predict_cond_uncond(model,
                         boundary,
                         offload_model,
                         y=None):
+    # WanModel expands this scalar timestep across seq_len. For prompt-only
+    # TI2V-5B this is equivalent to the all-ones mask used by WanTI2V.t2v.
     timestep = torch.stack([timestep]).to(model.device)
-    active_model = model._prepare_model_for_timestep(timestep[0], boundary,
-                                                     offload_model)
-    step_guide_scale = guide_scale[1] if timestep[0].item(
-    ) >= boundary else guide_scale[0]
+    active_model = prepare_dit_for_timestep(
+        model, timestep[0], boundary, offload_model)
+    step_guide_scale = guide_scale_for_timestep(
+        guide_scale, timestep[0], boundary)
 
     arg_c = {"context": [context[0]], "seq_len": seq_len}
     arg_null = {"context": context_null, "seq_len": seq_len}
@@ -435,6 +589,79 @@ def resize_latent_to_size(model, latent, reference_size, target_size):
     }
 
 
+def load_input_video(path, fps, max_frames=None):
+    """Sample an input video at the output rate and return normalized CTHW frames."""
+    try:
+        import imageio
+    except ImportError as exc:
+        raise ImportError(
+            "Video input requires imageio. Install Wan2.2 requirements in "
+            "the active environment.") from exc
+
+    reader = imageio.get_reader(str(path))
+    try:
+        source_fps = float(reader.get_meta_data().get("fps") or fps)
+        if not math.isfinite(source_fps) or source_fps <= 0:
+            raise ValueError(f"{path} has an invalid frame rate: {source_fps}.")
+        if fps <= 0:
+            raise ValueError("--fps must be positive.")
+        frames = []
+        next_sample = 0
+        for source_index, frame in enumerate(reader):
+            while next_sample * source_fps <= source_index * fps:
+                if max_frames is not None and len(frames) >= max_frames:
+                    break
+                if frame.ndim != 3 or frame.shape[2] < 3:
+                    raise ValueError(f"{path} must contain RGB video frames.")
+                frames.append(torch.from_numpy(frame[..., :3].copy()))
+                next_sample += 1
+            if max_frames is not None and len(frames) >= max_frames:
+                break
+    finally:
+        reader.close()
+
+    count = 1 + (len(frames) - 1) // 4 * 4
+    if count < 5:
+        raise ValueError(
+            f"{path} must provide at least five frames at {fps} FPS for "
+            "Wan's 4n+1 temporal latent layout.")
+    video = torch.stack(frames[:count]).permute(3, 0, 1, 2).float()
+    video = video.div_(127.5).sub_(1.0)
+    return video, source_fps
+
+
+def encode_input_video(model, path, fps, max_frames):
+    video, source_fps = load_input_video(path, fps, max_frames)
+    _, frame_count, source_h, source_w = video.shape
+    stride_h, stride_w = model.vae_stride[1:]
+    latent_h = source_h // stride_h
+    latent_w = source_w // stride_w
+    if latent_h < 1 or latent_w < 1:
+        raise ValueError(f"{path} has an unsupported aspect ratio.")
+    encode_h = latent_h * stride_h
+    encode_w = latent_w * stride_w
+    if (source_h, source_w) != (encode_h, encode_w):
+        video = F.interpolate(
+            video.permute(1, 0, 2, 3),
+            size=(encode_h, encode_w),
+            mode="bilinear",
+            align_corners=False).permute(1, 0, 2, 3)
+    with torch.no_grad():
+        latent = model.vae.encode([video.to(model.vae.device)])[0]
+    del video
+    expected_frames = (frame_count - 1) // model.vae_stride[0] + 1
+    if latent.shape[1:] != (expected_frames, latent_h, latent_w):
+        raise RuntimeError(
+            f"Encoded video latent has shape {tuple(latent.shape)}; expected "
+            f"(*, {expected_frames}, {latent_h}, {latent_w}).")
+    return latent, {
+        "input_frame_count": frame_count,
+        "input_video_fps": source_fps,
+        "input_video_size": f"{source_w}*{source_h}",
+        "encoded_video_size": f"{encode_w}*{encode_h}",
+    }
+
+
 def create_prompt_noise_latent(model, size, frame_num):
     width, height = parse_size(size)
     latent_h, latent_w = best_latent_size(
@@ -455,6 +682,32 @@ def create_prompt_noise_latent(model, size, frame_num):
         "input_resize_mode": "none",
         "latent_shape": tuple(latent.shape),
         "input_frame_count": frame_num,
+    }
+    return latent, seq_len, metadata
+
+
+def create_refinement_noise_latent(model, reference_size, target_size,
+                                   frame_num):
+    reference_width, reference_height = parse_size(reference_size)
+    target_width, target_height = parse_size(target_size)
+    target_area = target_width * target_height
+    latent_h, latent_w = best_latent_size(
+        reference_width, reference_height, target_area, model.vae_stride,
+        model.patch_size)
+    latent_frames = (frame_num - 1) // model.vae_stride[0] + 1
+    latent = torch.randn(
+        model.vae.model.z_dim,
+        latent_frames,
+        latent_h,
+        latent_w,
+        dtype=model.vae.dtype,
+        device=model.device)
+    seq_len = compute_seq_len(model, latent.shape)
+    decoded_height = latent_h * model.vae_stride[1]
+    decoded_width = latent_w * model.vae_stride[2]
+    metadata = {
+        "size": f"{decoded_width}*{decoded_height}",
+        "latent_shape": tuple(latent.shape),
     }
     return latent, seq_len, metadata
 
@@ -533,7 +786,10 @@ def denoise_trajectory(model,
                        offload_model,
                        step_callback=None,
                        y=None):
-    boundary = model.boundary * model.num_train_timesteps
+    model_boundary = getattr(model, "boundary", None)
+    boundary = (
+        model_boundary * model.num_train_timesteps
+        if model_boundary is not None else None)
     device = model.device
     latent = start_latent.detach().to(device)
     timesteps = timesteps.to(device) if isinstance(timesteps,
@@ -598,7 +854,9 @@ def decode_latent_to_video_tiled(vae,
                                  tile_h=None,
                                  tile_w=None,
                                  stride_h=160,
-                                 stride_w=140):
+                                 stride_w=140,
+                                 temporal_scale=4,
+                                 spatial_scale=(8, 8)):
     
     vae_model = vae.model
     device = vae.device
@@ -606,20 +864,33 @@ def decode_latent_to_video_tiled(vae,
 
     z = latent.to(device).unsqueeze(0)
     _, _, latent_frames, latent_h, latent_w = z.shape
+    if tile_h is not None and tile_h <= 0:
+        raise ValueError("VAE decode tile height must be positive.")
+    if tile_w is not None and tile_w <= 0:
+        raise ValueError("VAE decode tile width must be positive.")
     tile_h = latent_h if tile_h is None else min(tile_h, latent_h)
     stride_h = tile_h if stride_h is None else min(stride_h, tile_h)
     tile_w = latent_w if tile_w is None else min(tile_w, latent_w)
     stride_w = tile_w if stride_w is None else min(stride_w, tile_w)
     blend_h = tile_h - stride_h
     blend_w = tile_w - stride_w
-    out_frames = _vae_decoded_frame_count(latent_frames)
-    out_h, out_w = latent_h * 8, latent_w * 8
+    scale_h, scale_w = spatial_scale
+    out_frames = _vae_decoded_frame_count(latent_frames, temporal_scale)
+    out_h, out_w = latent_h * scale_h, latent_w * scale_w
 
 
     with torch.no_grad(), torch.amp.autocast("cuda", dtype=vae.dtype):
 
         z, (pad_h, pad_w) = _reflect_pad_spatial_5d(z, reflect_pad, reflect_pad)
         tasks = _vae_tile_tasks(latent_h, latent_w, tile_h, tile_w, stride_h, stride_w)
+        if is_main_process():
+            logging.info(
+                "Decoding latent shape %s with %d VAE tiles; maximum padded "
+                "tile is %dx%d latent positions",
+                tuple(latent.shape),
+                len(tasks),
+                tile_h + 2 * pad_h,
+                tile_w + 2 * pad_w)
 
         values = torch.zeros(1, 3, out_frames, out_h, out_w, dtype=torch.float32)
         weights = torch.zeros(1, 1, out_frames, out_h, out_w, dtype=torch.float32)
@@ -628,15 +899,18 @@ def decode_latent_to_video_tiled(vae,
                                     disable=not is_main_process()):
             tile = z[:, :, :, y0:y1 + 2 * pad_h, x0:x1 + 2 * pad_w].to(device)
             tile_out = vae_model.decode(tile, vae.scale).float().cpu()
-            core_h, core_w = (y1 - y0) * 8, (x1 - x0) * 8
-            tile_out = tile_out[..., pad_h * 8:pad_h * 8 + core_h,
-                                     pad_w * 8:pad_w * 8 + core_w]
+            core_h = (y1 - y0) * scale_h
+            core_w = (x1 - x0) * scale_w
+            tile_out = tile_out[
+                ..., pad_h * scale_h:pad_h * scale_h + core_h,
+                pad_w * scale_w:pad_w * scale_w + core_w]
 
-            out_y0, out_x0 = y0 * 8, x0 * 8
+            out_y0, out_x0 = y0 * scale_h, x0 * scale_w
             mask = _linear_blend_mask(
                 tile_out,
                 is_bound=(y0 == 0, y1 >= latent_h, x0 == 0, x1 >= latent_w),
-                border_width=(blend_h * 8, blend_w * 8)).float().cpu()
+                border_width=(blend_h * scale_h,
+                              blend_w * scale_w)).float().cpu()
             values[:, :, :, out_y0:out_y0 + core_h, out_x0:out_x0 + core_w] += tile_out * mask
             weights[:, :, :, out_y0:out_y0 + core_h, out_x0:out_x0 + core_w] += mask
 
@@ -653,7 +927,9 @@ def save_latent_video_tiled(vae,
                             save_path,
                             fps,
                             tile_h=None,
-                            tile_w=128):
+                            tile_w=128,
+                            temporal_scale=4,
+                            spatial_scale=(8, 8)):
     
     try:
         import imageio
@@ -663,17 +939,21 @@ def save_latent_video_tiled(vae,
             "the active environment, e.g. `pip install -r Wan2.2/requirements.txt`."
         ) from exc
     
-    writer = imageio.get_writer(save_path, fps=fps, codec="libx264", quality=8)
     video = decode_latent_to_video_tiled(
         vae,
         latent,
         tile_h=tile_h,
-        tile_w=tile_w)
-    for frame in video.unbind(1):
-        frame = ((frame.float() + 1.0) * 127.5).clamp_(0, 255)
-        frame = frame.to(torch.uint8).permute(1, 2, 0).cpu().numpy()
-        writer.append_data(frame)
-    writer.close()        
+        tile_w=tile_w,
+        temporal_scale=temporal_scale,
+        spatial_scale=spatial_scale)
+    writer = imageio.get_writer(save_path, fps=fps, codec="libx264", quality=8)
+    try:
+        for frame in video.unbind(1):
+            frame = ((frame.float() + 1.0) * 127.5).clamp_(0, 255)
+            frame = frame.to(torch.uint8).permute(1, 2, 0).cpu().numpy()
+            writer.append_data(frame)
+    finally:
+        writer.close()
 
 def load_latent_payload(path, latent_key="final_latent"):
     payload = torch.load(path, map_location="cpu")
@@ -706,6 +986,18 @@ def load_latent_payload(path, latent_key="final_latent"):
         f"{path} must contain a tensor, 'final_latent', or 'clean_latent'.")
 
 
+def create_vae(cfg, model_variant, checkpoint_dir, dtype, device):
+    vae_path = os.path.join(checkpoint_dir, cfg.vae_checkpoint)
+    if MODEL_VARIANTS[model_variant]["vae_version"] == "2.2":
+        from wan.modules.vae2_2 import Wan2_2_VAE
+
+        return Wan2_2_VAE(vae_pth=vae_path, dtype=dtype, device=device)
+
+    from wan.modules.vae2_1 import Wan2_1_VAE
+
+    return Wan2_1_VAE(vae_pth=vae_path, dtype=dtype, device=device)
+
+
 def decode_latent_only(args, cfg):
     rank = int(os.getenv("RANK", "0"))
     local_rank = int(os.getenv("LOCAL_RANK", args.device_id))
@@ -714,41 +1006,64 @@ def decode_latent_only(args, cfg):
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
 
-    from wan.modules.vae2_1 import Wan2_1_VAE
-
     latent_path = Path(args.decode_latent)
     output_path = latent_path.with_suffix(".mp4")
     latent, metadata = load_latent_payload(
         latent_path, args.decode_latent_key)
+    saved_variant = metadata.get("model_variant")
+    if saved_variant is not None and saved_variant != args.model_variant:
+        raise ValueError(
+            f"Latent was generated with {saved_variant}, but checkpoint/model "
+            f"selection resolved to {args.model_variant}.")
     fps = metadata.get("fps", args.fps)
     vae_dtype = parse_torch_dtype(args.vae_dtype)
-    vae = Wan2_1_VAE(
-        vae_pth=os.path.join(args.ckpt_dir, cfg.vae_checkpoint),
-        dtype=vae_dtype,
-        device=torch.device(f"cuda:{local_rank}"))
+    vae = create_vae(
+        cfg,
+        args.model_variant,
+        args.ckpt_dir,
+        vae_dtype,
+        torch.device(f"cuda:{local_rank}"))
     set_vae_dtype(vae, vae_dtype)
+    tile_h, tile_w = resolve_vae_decode_tile_size(
+        args.model_variant,
+        args.vae_decode_tile_height,
+        args.vae_decode_tile_width)
+    logging.info(
+        "Using VAE decode tile height=%s, width=%s latent positions",
+        "full" if tile_h is None else tile_h,
+        "full" if tile_w is None else tile_w)
     if metadata.get("decoded_latent_key") == "prompt_base_latent":
         with torch.no_grad():
             video = vae.decode([latent.to(vae.device)])[0]
         save_video_tensor(video, output_path, fps)
     else:
-        save_latent_video_tiled(vae, latent, output_path, fps)
+        save_latent_video_tiled(
+            vae,
+            latent,
+            output_path,
+            fps,
+            tile_h=tile_h,
+            tile_w=tile_w,
+            temporal_scale=cfg.vae_stride[0],
+            spatial_scale=cfg.vae_stride[1:])
 
     print(f"Saved video as {output_path}", flush=True)
 
 
 def run(args, model, cfg, prompt, output_latent, prompt_index):
 
-    frame_num = args.frame_num or cfg.frame_num
-    sample_steps = args.sample_steps or cfg.sample_steps
-    sample_shift = args.sample_shift or cfg.sample_shift
-    guide_scale = args.sample_guide_scale or cfg.sample_guide_scale
-    guide_scale = (guide_scale, guide_scale) if isinstance(
-        guide_scale, float) else guide_scale
+    frame_num = args.frame_num if args.frame_num is not None else cfg.frame_num
+    sample_steps = (
+        args.sample_steps if args.sample_steps is not None else cfg.sample_steps)
+    sample_shift = (
+        args.sample_shift if args.sample_shift is not None else cfg.sample_shift)
+    guide_scale = (
+        args.sample_guide_scale
+        if args.sample_guide_scale is not None else cfg.sample_guide_scale)
     step_offload_model = args.offload_model and not args.dit_fsdp
     text_offload_model = args.offload_model and not args.t5_fsdp
 
-    if frame_num % 4 != 1:
+    if args.input_video is None and frame_num % 4 != 1:
         raise ValueError("--frame_num must be 4n+1 for Wan T2V.")
    
     encode_size = args.size
@@ -760,6 +1075,14 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
         args.block_tiled_self_attn_global_rope_threshold_horizontal
         if args.block_tiled_self_attn_global_rope_threshold_horizontal
         is not None else args.block_tiled_self_attn_global_rope_threshold)
+    prompt_base_size = (
+        args.prompt_base_size
+        if args.prompt_base_size is not None
+        else prompt_base_size_for_variant(args.model_variant))
+    ar_max_relative_y = MODEL_VARIANTS[
+        args.model_variant]["ar_max_relative_y"]
+    ar_max_relative_x = MODEL_VARIANTS[
+        args.model_variant]["ar_max_relative_x"]
 
     context = context_null = None
     restart_scheduler = restart_timesteps = restart_sigmas = None
@@ -771,11 +1094,6 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
     if args.offload_model and (args.t5_fsdp or args.dit_fsdp):
         onload_dit_models(model)
 
-    # Every prompt base is generated at Wan's native resolution with the
-    # original RoPE frequencies. This also prevents an NTK factor from a
-    # previous prompt's refinement pass leaking into the next prompt.
-    set_spatial_ntk_rope_factor(model, 1.0)
-
     def configure_block_tiled_attention(enabled):
         set_block_tiled_self_attention(
             model,
@@ -783,95 +1101,171 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
             args.block_tiled_self_attn_tile_height,
             args.block_tiled_self_attn_tile_width,
             global_rope_threshold_y,
-            global_rope_threshold_x)
+            global_rope_threshold_x,
+            ar_max_relative_y,
+            ar_max_relative_x)
 
-    prompt_base_size = "1280*720"
-    base_latent, base_seq_len, _ = create_prompt_noise_latent(
-        model, prompt_base_size, frame_num)
-    if is_main_process():
-        logging.info("Generating prompt-conditioned base latent at %s",
-                     prompt_base_size)
-    base_scheduler, base_timesteps, base_sigmas = make_unipc_scheduler(
-        model, sample_steps, sample_shift)
-    set_block_tiled_self_attention(
-        model,
-        False,
-        args.block_tiled_self_attn_tile_height,
-        args.block_tiled_self_attn_tile_width,
-        global_rope_threshold_y,
-        global_rope_threshold_x)
-    base_latent, _ = denoise_trajectory(
-        model=model,
-        start_latent=base_latent,
-        context=context,
-        context_null=context_null,
-        seq_len=base_seq_len,
-        scheduler=base_scheduler,
-        timesteps=base_timesteps,
-        sigmas=base_sigmas,
-        sample_steps=sample_steps,
-        start_index=0,
-        guide_scale=guide_scale,
-        offload_model=step_offload_model,
-        y=None)
-    del base_scheduler, base_timesteps, base_sigmas
-    prompt_base_latent_cpu = (
-        base_latent.detach().cpu() if is_main_process() else None)
+    full_restart = args.round_noise_steps == sample_steps
+    video_metadata = {}
+    if args.input_video is not None:
+        if full_restart:
+            raise ValueError(
+                "--round_noise_steps must be less than sample_steps when "
+                "--input_video is provided; a full restart discards the video.")
+        if args.offload_model:
+            offload_dit_models(model)
+            onload_vae_model(model)
+        base_latent, video_metadata = encode_input_video(
+            model, args.input_video, args.fps, frame_num)
+        if is_main_process():
+            logging.info(
+                "Encoded %d input frames from %s at %s, then "
+                "latent-resizing to target area %s",
+                video_metadata["input_frame_count"], args.input_video,
+                video_metadata["encoded_video_size"], encode_size)
+        prompt_base_latent_cpu = (
+            base_latent.detach().cpu() if is_main_process() else None)
+        clean_latent, resize_metadata = resize_latent_to_size(
+            model, base_latent,
+            video_metadata["encoded_video_size"], encode_size)
+        seq_len = compute_seq_len(model, clean_latent.shape)
+        prompt_base_latent_shape = tuple(base_latent.shape)
+        input_resize_mode = "latent"
+        del base_latent
+    elif full_restart:
+        refinement_start_index = start_index_for_step_count(
+            args.round_noise_steps, sample_steps)
+        clean_latent, seq_len, resize_metadata = (
+            create_refinement_noise_latent(
+                model, prompt_base_size, encode_size, frame_num))
+        prompt_base_latent_cpu = None
+        prompt_base_latent_shape = None
+        input_resize_mode = "direct_noise"
+        if is_main_process():
+            logging.info(
+                "Skipping prompt-base generation because round_noise_steps "
+                "equals sample_steps (%d); initialized target latent at %s "
+                "directly from noise",
+                sample_steps,
+                resize_metadata["size"])
+    else:
+        base_latent, base_seq_len, _ = create_prompt_noise_latent(
+            model, prompt_base_size, frame_num)
+        if is_main_process():
+            logging.info("Generating prompt-conditioned base latent at %s",
+                         prompt_base_size)
+        base_scheduler, base_timesteps, base_sigmas = make_unipc_scheduler(
+            model, sample_steps, sample_shift)
+        set_block_tiled_self_attention(
+            model,
+            False,
+            args.block_tiled_self_attn_tile_height,
+            args.block_tiled_self_attn_tile_width,
+            global_rope_threshold_y,
+            global_rope_threshold_x,
+            ar_max_relative_y,
+            ar_max_relative_x)
+        base_latent, _ = denoise_trajectory(
+            model=model,
+            start_latent=base_latent,
+            context=context,
+            context_null=context_null,
+            seq_len=base_seq_len,
+            scheduler=base_scheduler,
+            timesteps=base_timesteps,
+            sigmas=base_sigmas,
+            sample_steps=sample_steps,
+            start_index=0,
+            guide_scale=guide_scale,
+            offload_model=step_offload_model,
+            y=None)
+        del base_scheduler, base_timesteps, base_sigmas
+        prompt_base_latent_cpu = (
+            base_latent.detach().cpu() if is_main_process() else None)
 
-    clean_latent, resize_metadata = resize_latent_to_size(
-        model, base_latent, prompt_base_size, encode_size)
-    seq_len = compute_seq_len(model, clean_latent.shape)
+        clean_latent, resize_metadata = resize_latent_to_size(
+            model, base_latent, prompt_base_size, encode_size)
+        seq_len = compute_seq_len(model, clean_latent.shape)
+        prompt_base_latent_shape = tuple(base_latent.shape)
+        input_resize_mode = "latent"
+        del base_latent
+        if is_main_process():
+            logging.info(
+                "Generated prompt base at %s, then latent-resized to %s",
+                prompt_base_size, resize_metadata["size"])
+
     metadata = {
         **resize_metadata,
-        "input_mode": "prompt",
+        "input_mode": "video" if args.input_video is not None else "prompt",
+        "input_video": str(Path(args.input_video).resolve()) if args.input_video else None,
+        **video_metadata,
         "prompt_base_size": prompt_base_size,
-        "prompt_base_latent_shape": tuple(base_latent.shape),
-        "input_resize_mode": "latent",
-        "input_frame_count": frame_num,
+        "prompt_base_latent_shape": prompt_base_latent_shape,
+        "input_resize_mode": input_resize_mode,
+        "input_frame_count": video_metadata.get("input_frame_count", frame_num),
+        "model_variant": args.model_variant,
         "block_tiled_self_attn": args.block_tiled_self_attn,
-        "rope_factor": (
-            1.0 if args.block_tiled_self_attn else args.rope_factor),
+        "block_tiled_self_attn_tile_size": (
+            args.block_tiled_self_attn_tile_height,
+            args.block_tiled_self_attn_tile_width),
+        "block_tiled_self_attn_global_rope_threshold": (
+            global_rope_threshold_y, global_rope_threshold_x),
+        "block_tiled_self_attn_max_relative": (
+            ar_max_relative_y, ar_max_relative_x),
     }
-    del base_latent
-    if is_main_process():
-        logging.info("Generated prompt base at %s, then latent-resized to %s",
-                     metadata["prompt_base_size"], metadata["size"])
+    if full_restart:
+        metadata["base_generation_skipped"] = True
 
     if args.offload_model:
         offload_vae_model(model)
 
     configure_block_tiled_attention(args.block_tiled_self_attn)
-    if not args.block_tiled_self_attn:
-        set_spatial_ntk_rope_factor(model, args.rope_factor)
-        if is_main_process():
-            logging.info(
-                "Using spatial NTK-RoPE factor %.4g for high-resolution "
-                "refinement", args.rope_factor)
 
     @contextmanager
     def noop_no_sync():
         yield
 
-    no_sync_low = getattr(model.low_noise_model, "no_sync", noop_no_sync)
-    no_sync_high = (
-        noop_no_sync if model.high_noise_model is model.low_noise_model else
-        getattr(model.high_noise_model, "no_sync", noop_no_sync))
     final_latent = clean_latent.detach()
-    with no_sync_low(), no_sync_high():
-        final_latent, start_index = denoise(
-            model=model,
-            clean_latent=final_latent,
-            round_noise_steps=args.round_noise_steps,
-            context=context,
-            context_null=context_null,
-            seq_len=seq_len,
-            scheduler=restart_scheduler,
-            timesteps=restart_timesteps,
-            sigmas=restart_sigmas,
-            sample_steps=sample_steps,
-            guide_scale=guide_scale,
-            offload_model=step_offload_model,
-            y=None)
+    with ExitStack() as no_sync_stack:
+        for _, dit_model in unique_dit_models(model):
+            no_sync = getattr(dit_model, "no_sync", noop_no_sync)
+            no_sync_stack.enter_context(no_sync())
+        if full_restart:
+            first_sigma = float(restart_sigmas[0].item())
+            if not math.isclose(first_sigma, 1.0, rel_tol=0.0, abs_tol=1e-6):
+                raise RuntimeError(
+                    "Full-restart refinement requires the first scheduler "
+                    f"sigma to be 1.0, but received {first_sigma}.")
+            start_index = refinement_start_index
+            final_latent, _ = denoise_trajectory(
+                model=model,
+                start_latent=final_latent,
+                context=context,
+                context_null=context_null,
+                seq_len=seq_len,
+                scheduler=restart_scheduler,
+                timesteps=restart_timesteps,
+                sigmas=restart_sigmas,
+                sample_steps=sample_steps,
+                start_index=start_index,
+                guide_scale=guide_scale,
+                offload_model=step_offload_model,
+                y=None)
+        else:
+            final_latent, start_index = denoise(
+                model=model,
+                clean_latent=final_latent,
+                round_noise_steps=args.round_noise_steps,
+                context=context,
+                context_null=context_null,
+                seq_len=seq_len,
+                scheduler=restart_scheduler,
+                timesteps=restart_timesteps,
+                sigmas=restart_sigmas,
+                sample_steps=sample_steps,
+                guide_scale=guide_scale,
+                offload_model=step_offload_model,
+                y=None)
 
     if args.offload_model:  
         offload_dit_models(model)
@@ -897,9 +1291,11 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
     gc.collect()
     torch.cuda.empty_cache()
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run Wan2.2 CineScale for every prompt in a JSON file."
+        description="Run Wan2.1 or Wan2.2 CineScale for every prompt in a "
+        "JSON file, optionally refining an input video."
     )
     parser.add_argument(
         "--prompts_json",
@@ -910,9 +1306,22 @@ def parse_args():
         default="CineScale/batch_latents",
         help="Directory for prompt-named latent .pt outputs.")
     parser.add_argument(
+        "--input_video",
+        default=None,
+        help="Video to encode with the selected Wan VAE instead of generating "
+        "a prompt base. Reused for each prompt in --prompts_json.")
+    parser.add_argument(
         "--ckpt_dir",
         required=True,
-        help="Wan2.2-T2V-A14B checkpoint directory.")
+        help="Wan2.2 T2V-A14B, Wan2.2 TI2V-5B, or Wan2.1 T2V-1.3B "
+        "checkpoint directory.")
+    parser.add_argument(
+        "--model_variant",
+        type=parse_model_variant,
+        default="auto",
+        metavar="{auto,t2v-A14B,ti2v-5B,wan2.1-t2v-1.3B}",
+        help="Model architecture to load. By default, detect it from the "
+        "checkpoint layout.")
     parser.add_argument(
         "--decode_latent",
         default=None,
@@ -926,19 +1335,52 @@ def parse_args():
         default="fp16",
         choices=("fp32", "fp16", "bf16"),
         help="VAE encode/decode dtype.")
-    parser.add_argument("--fps", type=int, default=16)
+    parser.add_argument(
+        "--vae_decode_tile_height",
+        type=int,
+        default=None,
+        help="VAE spatial decode tile height in latent positions. Defaults "
+        "to 64 for Wan2.1 1.3B and full height for other variants.")
+    parser.add_argument(
+        "--vae_decode_tile_width",
+        type=int,
+        default=None,
+        help="VAE spatial decode tile width in latent positions. Defaults "
+        "to 64 for Wan2.1 1.3B and 128 for other variants.")
+    parser.add_argument(
+        "--fps",
+        type=int,
+        default=None,
+        help="Output FPS stored with the latent. Defaults to the model config.")
     parser.add_argument(
         "--size",
         default="3840*2160",
-        help="Target area as width*height. Prompt mode starts from a 1280*720 latent; latent input mode preserves the input latent aspect ratio.")
-    parser.add_argument("--frame_num", type=int, default=None)
+        help="Target area as width*height. The prompt base or input video's "
+        "aspect ratio is preserved during latent upsampling.")
+    parser.add_argument(
+        "--prompt_base_size",
+        default=None,
+        help="Override the model variant's prompt-base resolution as "
+        "width*height. For example, use 1280*720 to experimentally generate "
+        "a 720p Wan2.1-1.3B base before high-resolution refinement.")
+    parser.add_argument(
+        "--frame_num", type=int, default=None,
+        help="Prompt mode frame count. In video mode, maximum input frames "
+        "sampled at --fps (defaults to the model config and is trimmed "
+        "to 4n+1).")
     parser.add_argument("--sample_steps", type=int, default=None)
     parser.add_argument(
         "--round_noise_steps",
         type=int,
         default=30,
-        help="Exact denoising steps per noise round.")
-    parser.add_argument("--sample_shift", type=float, default=12.0)
+        help="Exact high-resolution refinement steps. When this equals "
+        "sample_steps, prompt-base generation and latent resizing are "
+        "skipped and the target latent is initialized directly from noise.")
+    parser.add_argument(
+        "--sample_shift",
+        type=float,
+        default=None,
+        help="Noise schedule shift. Defaults to the selected model config.")
     parser.add_argument("--sample_guide_scale", type=float, default=None)
     parser.add_argument("--negative_prompt", default="")
     parser.add_argument(
@@ -946,12 +1388,6 @@ def parse_args():
         type=str2bool,
         default=True,
         help="Tile only DiT self-attention inside each block, stitch the self-attention output, then run global cross-attention/FFN.")
-    parser.add_argument(
-        "--rope_factor",
-        type=float,
-        default=1.0,
-        help="Spatial NTK-RoPE extension factor used during high-resolution "
-        "refinement. Only valid when --block_tiled_self_attn=false.")
     parser.add_argument(
         "--block_tiled_self_attn_tile_width",
         type=int,
@@ -1002,6 +1438,22 @@ def parse_args():
     return parser.parse_args()
 
 
+def create_generation_model(wan, args, cfg):
+    pipeline_name = MODEL_VARIANTS[args.model_variant]["pipeline"]
+    pipeline_class = getattr(wan, pipeline_name)
+    return pipeline_class(
+        config=cfg,
+        checkpoint_dir=args.ckpt_dir,
+        device_id=args.device_id,
+        rank=args.rank,
+        t5_fsdp=args.t5_fsdp,
+        dit_fsdp=args.dit_fsdp,
+        use_sp=(args.ulysses_size > 1),
+        t5_cpu=args.t5_cpu,
+        init_on_cpu=True,
+        convert_model_dtype=args.convert_model_dtype)
+
+
 def main():
     logging.basicConfig(level=logging.INFO)
     args = parse_args()
@@ -1009,12 +1461,19 @@ def main():
     import wan
     from wan.configs import WAN_CONFIGS
 
-    cfg = make_model_config(WAN_CONFIGS)
-    args.model_version = "2.2"
-    logging.info("Using Wan2.2 checkpoint layout")
+    args.model_variant = resolve_model_variant(
+        args.model_variant, args.ckpt_dir)
+    cfg = make_model_config(WAN_CONFIGS, args.model_variant)
+    if args.fps is None:
+        args.fps = cfg.sample_fps
+    args.model_version = MODEL_VARIANTS[args.model_variant]["model_version"]
+    logging.info("Using Wan%s %s checkpoint layout", args.model_version,
+                 args.model_variant)
     if args.decode_latent is not None:
         decode_latent_only(args, cfg)
         return
+    if args.input_video is not None and not Path(args.input_video).is_file():
+        raise FileNotFoundError(f"Input video does not exist: {args.input_video}")
     prompts = load_prompts(args.prompts_json)
 
     rank, world_size, _ = setup_distributed(args)
@@ -1029,13 +1488,6 @@ def main():
         raise ValueError(
             f"cfg.num_heads={cfg.num_heads} must be divisible by --ulysses_size."
         )
-    if args.rope_factor <= 0:
-        raise ValueError("--rope_factor must be greater than zero.")
-    if args.block_tiled_self_attn and args.rope_factor != 1.0:
-        raise ValueError(
-            "--rope_factor is only valid when "
-            "--block_tiled_self_attn=false.")
-
     seed = args.base_seed if args.base_seed >= 0 else (
         random.randint(0, sys.maxsize) if rank == 0 else 0)
     if dist.is_initialized():
@@ -1046,19 +1498,9 @@ def main():
     torch.manual_seed(seed)
     args.run_seed = seed
 
-
-    model = wan.WanT2V(
-        config=cfg,
-        checkpoint_dir=args.ckpt_dir,
-        device_id=args.device_id,
-        rank=args.rank,
-        t5_fsdp=args.t5_fsdp,
-        dit_fsdp=args.dit_fsdp,
-        use_sp=(args.ulysses_size > 1),
-        t5_cpu=args.t5_cpu,
-        init_on_cpu=True,
-        convert_model_dtype=args.convert_model_dtype)
-    model.model_version = "2.2"
+    model = create_generation_model(wan, args, cfg)
+    model.model_version = args.model_version
+    model.model_variant = args.model_variant
 
     set_vae_dtype(model.vae, parse_torch_dtype(args.vae_dtype))
     output_dir = Path(args.output_dir)
@@ -1092,4 +1534,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
