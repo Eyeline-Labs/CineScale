@@ -33,6 +33,8 @@ MODEL_VARIANTS = {
         "model_version": "2.2",
         "ar_max_relative_y": 44,
         "ar_max_relative_x": 79,
+        "attention_tile_height": 18,
+        "attention_tile_width": 32,
         "vae_decode_tile_height": None,
         "vae_decode_tile_width": 128,
     },
@@ -43,6 +45,8 @@ MODEL_VARIANTS = {
         "model_version": "2.2",
         "ar_max_relative_y": 44,
         "ar_max_relative_x": 79,
+        "attention_tile_height": 18,
+        "attention_tile_width": 32,
         "vae_decode_tile_height": None,
         "vae_decode_tile_width": 128,
     },
@@ -53,6 +57,8 @@ MODEL_VARIANTS = {
         "model_version": "2.1",
         "ar_max_relative_y": 44,
         "ar_max_relative_x": 79,
+        "attention_tile_height": 12,
+        "attention_tile_width": 21,
         "vae_decode_tile_height": 64,
         "vae_decode_tile_width": 64,
     },
@@ -1068,13 +1074,9 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
    
     encode_size = args.size
     global_rope_threshold_y = (
-        args.block_tiled_self_attn_global_rope_threshold_vertical
-        if args.block_tiled_self_attn_global_rope_threshold_vertical
-        is not None else args.block_tiled_self_attn_global_rope_threshold)
+        args.block_tiled_self_attn_global_rope_threshold_vertical)
     global_rope_threshold_x = (
-        args.block_tiled_self_attn_global_rope_threshold_horizontal
-        if args.block_tiled_self_attn_global_rope_threshold_horizontal
-        is not None else args.block_tiled_self_attn_global_rope_threshold)
+        args.block_tiled_self_attn_global_rope_threshold_horizontal)
     prompt_base_size = (
         args.prompt_base_size
         if args.prompt_base_size is not None
@@ -1083,6 +1085,14 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
         args.model_variant]["ar_max_relative_y"]
     ar_max_relative_x = MODEL_VARIANTS[
         args.model_variant]["ar_max_relative_x"]
+    attention_tile_height = (
+        args.block_tiled_self_attn_tile_height
+        if args.block_tiled_self_attn_tile_height is not None
+        else MODEL_VARIANTS[args.model_variant]["attention_tile_height"])
+    attention_tile_width = (
+        args.block_tiled_self_attn_tile_width
+        if args.block_tiled_self_attn_tile_width is not None
+        else MODEL_VARIANTS[args.model_variant]["attention_tile_width"])
 
     context = context_null = None
     restart_scheduler = restart_timesteps = restart_sigmas = None
@@ -1098,8 +1108,8 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
         set_block_tiled_self_attention(
             model,
             enabled,
-            args.block_tiled_self_attn_tile_height,
-            args.block_tiled_self_attn_tile_width,
+            attention_tile_height,
+            attention_tile_width,
             global_rope_threshold_y,
             global_rope_threshold_x,
             ar_max_relative_y,
@@ -1159,8 +1169,8 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
         set_block_tiled_self_attention(
             model,
             False,
-            args.block_tiled_self_attn_tile_height,
-            args.block_tiled_self_attn_tile_width,
+            attention_tile_height,
+            attention_tile_width,
             global_rope_threshold_y,
             global_rope_threshold_x,
             ar_max_relative_y,
@@ -1206,8 +1216,8 @@ def run(args, model, cfg, prompt, output_latent, prompt_index):
         "model_variant": args.model_variant,
         "block_tiled_self_attn": args.block_tiled_self_attn,
         "block_tiled_self_attn_tile_size": (
-            args.block_tiled_self_attn_tile_height,
-            args.block_tiled_self_attn_tile_width),
+            attention_tile_height,
+            attention_tile_width),
         "block_tiled_self_attn_global_rope_threshold": (
             global_rope_threshold_y, global_rope_threshold_x),
         "block_tiled_self_attn_max_relative": (
@@ -1361,8 +1371,7 @@ def parse_args():
         "--prompt_base_size",
         default=None,
         help="Override the model variant's prompt-base resolution as "
-        "width*height. For example, use 1280*720 to experimentally generate "
-        "a 720p Wan2.1-1.3B base before high-resolution refinement.")
+        "width*height. Defaults to the model variant's configured base size.")
     parser.add_argument(
         "--frame_num", type=int, default=None,
         help="Prompt mode frame count. In video mode, maximum input frames "
@@ -1391,18 +1400,15 @@ def parse_args():
     parser.add_argument(
         "--block_tiled_self_attn_tile_width",
         type=int,
-        default=32,
-        help="Inner self-attention tile width in transformer patch-token units.")
+        default=None,
+        help="Inner self-attention tile width in transformer patch-token "
+        "units. Defaults to 21 for Wan2.1 1.3B and 32 otherwise.")
     parser.add_argument(
         "--block_tiled_self_attn_tile_height",
         type=int,
-        default=18,
-        help="Inner self-attention tile height in transformer patch-token units.")
-    parser.add_argument(
-        "--block_tiled_self_attn_global_rope_threshold",
-        type=float,
-        default=20.0,
-        help="Fallback threshold for both axes. Axis-specific options override it.")
+        default=None,
+        help="Inner self-attention tile height in transformer patch-token "
+        "units. Defaults to 12 for Wan2.1 1.3B and 18 otherwise.")
     parser.add_argument(
         "--block_tiled_self_attn_global_rope_threshold_horizontal",
         type=float,
@@ -1476,7 +1482,7 @@ def main():
         raise FileNotFoundError(f"Input video does not exist: {args.input_video}")
     prompts = load_prompts(args.prompts_json)
 
-    rank, world_size, _ = setup_distributed(args)
+    rank, _, _ = setup_distributed(args)
 
     if args.offload_model is None:
         args.offload_model = True
@@ -1534,5 +1540,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
