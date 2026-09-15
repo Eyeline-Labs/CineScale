@@ -121,6 +121,8 @@ class WanSelfAttention(nn.Module):
         self.block_tiled_attn_global_rope_threshold = 24.0
         self.block_tiled_attn_global_rope_threshold_y = None
         self.block_tiled_attn_global_rope_threshold_x = None
+        self.block_tiled_attn_max_relative_y = 44
+        self.block_tiled_attn_max_relative_x = 79
 
         # layers
         self.q = nn.Linear(dim, dim)
@@ -195,8 +197,8 @@ class WanSelfAttention(nn.Module):
             rope_threshold_y = self.block_tiled_attn_global_rope_threshold
         if rope_threshold_x is None:
             rope_threshold_x = self.block_tiled_attn_global_rope_threshold
-        max_relative_y = 44
-        max_relative_x = 79
+        max_relative_y = self.block_tiled_attn_max_relative_y
+        max_relative_x = self.block_tiled_attn_max_relative_x
         if min(tile_h, tile_w) <= 0:
             raise ValueError(
                 "Block tiled self-attention tile values must be positive.")
