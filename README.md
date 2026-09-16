@@ -231,9 +231,9 @@ This codebase is built on top of the open-source implementation of [Wan2.2](http
 If you find CineScale useful in your research or projects, consider citing our paper:
 ```bib
 @article{qiu2025cinescale,
-  title={CineScale: Free Lunch in High-Resolution Cinematic Visual Generation}, 
-  author={Gordon Chen and Haonan Qiu and Ning Yu and Ziqi Huang and Paul Debevec and Ziwei Liu},
+  title={CineScale: Tuning-Free High-Resolution Video Generation},
+  author={Chen, Gordon and Qiu, Haonan and Yu, Ning and Huang, Ziqi and Debevec, Paul and Liu, Ziwei},
   journal={arXiv preprint arXiv:2508.15774},
-  year={2025}
+  year={2026}
 }
 ```
