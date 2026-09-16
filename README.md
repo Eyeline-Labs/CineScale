@@ -230,7 +230,7 @@ This codebase is built on top of the open-source implementation of [Wan2.2](http
 ## 📖 Citation
 If you find CineScale useful in your research or projects, consider citing our paper:
 ```bib
-@article{qiu2025cinescale,
+@article{chen2026cinescale,
   title={CineScale: Tuning-Free High-Resolution Video Generation},
   author={Chen, Gordon and Qiu, Haonan and Yu, Ning and Huang, Ziqi and Debevec, Paul and Liu, Ziwei},
   journal={arXiv preprint arXiv:2508.15774},
