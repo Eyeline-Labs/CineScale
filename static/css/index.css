@@ -3382,12 +3382,36 @@ main,
   }
 
   .citation-card {
-    padding: 1.4rem;
-    border-radius: 20px;
+    gap: 1.35rem;
+    padding: 1.15rem;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .citation-copy .title {
+    margin-bottom: 0.65rem !important;
+    font-size: 2rem !important;
+  }
+
+  .citation-note {
+    margin-top: 0 !important;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    text-align: center;
+  }
+
+  .citation-bibtex-shell {
+    width: 100%;
+    min-width: 0;
   }
 
   .citation-bibtex {
-    font-size: 0.62rem;
+    padding: 3rem 0.9rem 0.95rem;
+    font-size: 0.64rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-x: hidden;
   }
 
   .footer-inner {
