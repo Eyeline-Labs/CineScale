@@ -2370,10 +2370,13 @@ main,
 .paper-figure-stack {
   gap: clamp(3rem, 7vw, 6rem);
   margin-top: 0;
+  min-width: 0;
 }
 
 .rope-ablation-card {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ablation-figure-heading {
@@ -2403,8 +2406,14 @@ main,
 }
 
 .ablation-matrix-scroll {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   padding: clamp(1rem, 2vw, 1.5rem);
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--line);
   border-radius: 22px;
   background:
@@ -2413,6 +2422,10 @@ main,
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
   scrollbar-color: rgba(255, 153, 53, 0.55) rgba(255, 255, 255, 0.05);
   scrollbar-width: thin;
+}
+
+.horizontal-scroll-hint {
+  display: none;
 }
 
 .ablation-matrix-scroll:focus-visible {
@@ -2741,6 +2754,8 @@ main,
 .vbench-card {
   position: relative;
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 26px;
@@ -2751,8 +2766,13 @@ main,
 }
 
 .vbench-table-scroll {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
   scrollbar-color: rgba(255, 157, 50, 0.42) rgba(255, 255, 255, 0.04);
 }
 
@@ -3265,6 +3285,33 @@ main,
   .paper-figure-card figcaption {
     flex-direction: column;
     gap: 0.4rem;
+  }
+
+  .horizontal-scroll-hint {
+    display: flex;
+    margin: 0 0 0.55rem;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    color: #9b9994;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .horizontal-scroll-hint-arrow {
+    color: var(--orange-bright);
+    font-size: 0.78rem;
+    letter-spacing: 0;
+  }
+
+  .vbench-scroll-hint {
+    margin: 0;
+    padding: 0.85rem 0.9rem 0.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .vbench-section .section-heading {
