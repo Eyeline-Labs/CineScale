@@ -2,21 +2,12 @@ window.HELP_IMPROVE_VIDEOJS = false;
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const siteNav = document.querySelector('.site-nav');
-    const navToggle = document.querySelector('.nav-toggle');
-    const navLinksContainer = document.querySelector('.site-nav-links');
-    const navActions = document.querySelector('.nav-actions');
-    const navLinks = Array.from(document.querySelectorAll('.site-nav-links a[href^="#"]'));
-    const pageSections = Array.from(document.querySelectorAll('[data-section]'));
     let pageFrame = null;
 
     const updatePageChrome = () => {
       const scrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
       const progress = Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100));
       document.documentElement.style.setProperty('--scroll-progress', `${progress}%`);
-      if (siteNav) {
-        siteNav.classList.toggle('is-scrolled', window.scrollY > 24);
-      }
       pageFrame = null;
     };
 
@@ -29,50 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', requestPageChromeUpdate, { passive: true });
     window.addEventListener('resize', requestPageChromeUpdate, { passive: true });
     updatePageChrome();
-
-    if (navToggle && navLinksContainer) {
-      const setNavigationOpen = (open) => {
-        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-        navLinksContainer.classList.toggle('is-open', open);
-        if (navActions) {
-          navActions.classList.toggle('is-open', open);
-        }
-      };
-
-      navToggle.addEventListener('click', () => {
-        setNavigationOpen(navToggle.getAttribute('aria-expanded') !== 'true');
-      });
-
-      navLinks.forEach((link) => {
-        link.addEventListener('click', () => setNavigationOpen(false));
-      });
-
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-          setNavigationOpen(false);
-        }
-      });
-    }
-
-    if ('IntersectionObserver' in window && pageSections.length > 0) {
-      const sectionObserver = new IntersectionObserver((entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (!visibleEntry) {
-          return;
-        }
-        const activeId = visibleEntry.target.id;
-        navLinks.forEach((link) => {
-          link.classList.toggle('is-active', link.getAttribute('href') === `#${activeId}`);
-        });
-      }, {
-        rootMargin: '-25% 0px -60% 0px',
-        threshold: [0, 0.15, 0.4],
-      });
-      pageSections.forEach((section) => sectionObserver.observe(section));
-    }
 
     document.querySelectorAll('[data-glow-card]').forEach((card) => {
       const resetGlow = () => {
