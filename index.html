@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/index.css?v=20260921">
+  <link rel="stylesheet" href="static/css/index.css?v=20260922-13">
 
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <script defer src="static/js/bulma-carousel.min.js"></script>
@@ -179,6 +179,50 @@
               />
             </a>
             <figcaption>Framework overview: tiled self-attention with Adaptively Rectified RoPE.</figcaption>
+          </figure>
+
+          <figure class="method-visual-explainer">
+            <div class="coordinate-compression" role="img" aria-label="Standard RoPE spans the full 4K coordinate range without a query tile. Adaptively Rectified RoPE compresses positions outside a three-token query tile, restores the full range, then advances the query tile three tokens at a time from left to right.">
+              <div class="coordinate-row-label">
+                <strong>RoPE</strong>
+                <span>full 4K span</span>
+              </div>
+              <div class="coordinate-track coordinate-track-wide" aria-hidden="true">
+                <i style="--coordinate-x: 4%"></i><i style="--coordinate-x: 12%"></i><i style="--coordinate-x: 20%"></i><i style="--coordinate-x: 28%"></i><i style="--coordinate-x: 36%"></i><i style="--coordinate-x: 44%"></i><i style="--coordinate-x: 52%"></i><i style="--coordinate-x: 60%"></i><i style="--coordinate-x: 68%"></i><i style="--coordinate-x: 76%"></i><i style="--coordinate-x: 84%"></i><i style="--coordinate-x: 92%"></i>
+              </div>
+              <div class="compression-marker" aria-hidden="true">
+                <span></span><b>compress outside only</b><span></span>
+              </div>
+              <div class="coordinate-row-label">
+                <strong>Adaptively Rectified RoPE</strong>
+                <span class="is-ready">inside stays fixed</span>
+              </div>
+              <div class="coordinate-track coordinate-track-compressed ar-rope-animation" aria-hidden="true">
+                <span class="outside-coordinate-label is-left">compressed &rarr;</span>
+                <span class="query-coordinate-band ar-query-band"><span>query tile</span></span>
+                <span class="query-highlight-layer">
+                  <b style="--coordinate-x: 4%"></b><b style="--coordinate-x: 12%"></b><b style="--coordinate-x: 20%"></b><b style="--coordinate-x: 28%"></b><b style="--coordinate-x: 36%"></b><b style="--coordinate-x: 44%"></b><b style="--coordinate-x: 52%"></b><b style="--coordinate-x: 60%"></b><b style="--coordinate-x: 68%"></b><b style="--coordinate-x: 76%"></b><b style="--coordinate-x: 84%"></b><b style="--coordinate-x: 92%"></b>
+                </span>
+                <span class="outside-coordinate-label is-right">&larr; compressed</span>
+                <i style="--base-x: 4%; --c1-x: 4%; --c2-x: 14%; --c3-x: 28%; --c4-x: 39%"></i>
+                <i style="--base-x: 12%; --c1-x: 12%; --c2-x: 19%; --c3-x: 32%; --c4-x: 43%"></i>
+                <i style="--base-x: 20%; --c1-x: 20%; --c2-x: 23%; --c3-x: 36%; --c4-x: 47%"></i>
+                <i style="--base-x: 28%; --c1-x: 25%; --c2-x: 28%; --c3-x: 40%; --c4-x: 51%"></i>
+                <i style="--base-x: 36%; --c1-x: 29%; --c2-x: 36%; --c3-x: 44%; --c4-x: 55%"></i>
+                <i style="--base-x: 44%; --c1-x: 33%; --c2-x: 44%; --c3-x: 47%; --c4-x: 59%"></i>
+                <i style="--base-x: 52%; --c1-x: 37%; --c2-x: 49%; --c3-x: 52%; --c4-x: 63%"></i>
+                <i style="--base-x: 60%; --c1-x: 41%; --c2-x: 52%; --c3-x: 60%; --c4-x: 67%"></i>
+                <i style="--base-x: 68%; --c1-x: 45%; --c2-x: 56%; --c3-x: 68%; --c4-x: 71%"></i>
+                <i style="--base-x: 76%; --c1-x: 49%; --c2-x: 60%; --c3-x: 73%; --c4-x: 76%"></i>
+                <i style="--base-x: 84%; --c1-x: 53%; --c2-x: 64%; --c3-x: 77%; --c4-x: 84%"></i>
+                <i style="--base-x: 92%; --c1-x: 57%; --c2-x: 68%; --c3-x: 82%; --c4-x: 92%"></i>
+              </div>
+            </div>
+            <div class="method-visual-outcome" aria-label="CineScale outcome">
+              <span>Local detail stays precise</span>
+              <span>Global context stays visible</span>
+              <span>Positions fit the pretrained range</span>
+            </div>
           </figure>
 
           <p class="method-intro">

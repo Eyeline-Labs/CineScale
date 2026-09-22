@@ -1328,6 +1328,7 @@ document.addEventListener('DOMContentLoaded', function() {
       '.section .title',
       '.tldr-summary',
       '.pipeline-figure',
+      '.method-visual-explainer',
       '.content > p',
       '.method-paper-cta',
       '.figure-showcase .paper-figure-card',
